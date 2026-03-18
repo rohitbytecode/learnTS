@@ -1,0 +1,16 @@
+services:
+
+ postgres:
+  image: postgres
+  environment:
+   POSTGRES_DB: saas_db
+   POSTGRES_PASSWORD: password
+  ports:
+   - "5432:5432"
+
+ api:
+  build: .
+  ports:
+   - "5000:5000"
+  depends_on:
+   - postgres
