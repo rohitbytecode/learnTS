@@ -11,3 +11,7 @@ export const createPatient = async (req: Request, res: Response) => {
 
     res.json(patient)
 }
+
+export const getPatients = async (req: Request, res: Response) => {
+    const patients = await prisma
+}
