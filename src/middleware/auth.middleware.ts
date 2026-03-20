@@ -9,7 +9,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         return res.status(401).json({ message: "Unauthorized" })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as Express.AuthPayload
 
     req.user = decoded
     next()
