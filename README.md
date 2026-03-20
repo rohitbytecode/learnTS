@@ -65,9 +65,11 @@ docker run -p 5000:5000 --env-file .env learnts
 Create a `.env` file in the root:
 
 ```env
-PORT=5000
-DATABASE_URL=your_database_url
-JWT_SECRET=your_secret
+DATABASE_URL=Your_postgres_URL
+POSTGRES_PASSWORD=Your_postgres_password
+JWT_SECRET=your_JWT_secret
+PORT=your_port
+NODE_ENV=your_environment
 ```
 
 ---
