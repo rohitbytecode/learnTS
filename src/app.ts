@@ -8,4 +8,11 @@ app.use(express.json())
 app.use(cors())
 app.use(helmet())
 
+app.get('/',(req,res) => {
+    res.status(200).json({
+        success: true,
+        message: "Backend is online"
+    })
+})
+
 export default app
