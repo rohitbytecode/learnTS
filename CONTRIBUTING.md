@@ -1,39 +1,52 @@
-```md
+````md
 # Contributing
+
+Contributions are welcome. Keep changes minimal, clear, and aligned with the existing structure.
 
 ---
 
-## Rules
+## Guidelines
 
-- Use TypeScript properly (avoid `any`)
-- Keep code clean and simple
-- Follow existing structure
+- Write clean and typed TypeScript (avoid `any` unless necessary)
+- Follow the current project structure
+- Keep functions small and focused
+- Do not introduce unnecessary dependencies
 
 ---
 
 ## Workflow
 
-1. Fork the repo
-2. Create a branch
-```
+1. Fork the repository
 
-feature/your-feature-name
+2. Create a new branch
 
-```
-3. Make changes
-4. Commit
-```
+```bash
+git checkout -b feature/your-feature-name
+````
 
+3. Make your changes
+
+4. Commit your changes
+
+```bash
 git commit -m "feat: add feature"
-
 ```
-5. Create Pull Request
+
+5. Push your branch
+
+```bash
+git push origin feature/your-feature-name
+```
+
+6. Open a Pull Request
 
 ---
 
 ## Notes
 
-- Do not push directly to main
-- Test your changes before PR
-- Keep commits meaningful
+* Do not push directly to `main`
+* Ensure the project runs before creating a PR
+* Keep commit messages meaningful and concise
+* Avoid unrelated changes in a single PR
+
 ```
