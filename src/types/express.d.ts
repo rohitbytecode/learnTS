@@ -10,5 +10,11 @@ declare global {
       }
       tenantId?: string
     }
+
+    interface AuthPayload {
+    userId: string;
+    tenantId: string;
+    role: string;
+    }
   }
 }
