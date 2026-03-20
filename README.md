@@ -1,4 +1,4 @@
-````md
+```md
 # LearnTS
 
 Backend project built with TypeScript and Node.js, focused on implementing patterns used in real-world SaaS applications.

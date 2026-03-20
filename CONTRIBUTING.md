@@ -1,4 +1,4 @@
-````md
+```md
 # Contributing
 
 Contributions are welcome. Keep changes minimal, clear, and aligned with the existing structure.
