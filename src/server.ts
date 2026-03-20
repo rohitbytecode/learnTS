@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import http from 'http';
 import app from './app'
-import { prisma, closeDB } from './config/db';
+import { connectDB, closeDB } from './config/db';
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -11,15 +11,15 @@ let server: http.Server | undefined;
 const startServer = async() => {
     try {
         if (!process.env.DATABASE_URL) {
-            throw new Error("DATABASE_URI is missing in environment variables");
+            throw new Error("DATABASE_URL is missing in environment variables");
         }
 
         if (!process.env.JWT_SECRET) {
             throw new Error("JWT_SECRET is missing in environment variables");
         }
 
-        await prisma.$connect();
-        console.log("PostgreS connected successfully");
+        await connectDB();
+        //console.log("PostgreS connected successfully");
 
         server = http.createServer(app);
 

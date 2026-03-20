@@ -3,8 +3,9 @@ services:
  postgres:
   image: postgres
   environment:
+   POSTGRES_USER: postgres
    POSTGRES_DB: saas_db
-   POSTGRES_PASSWORD: password
+   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
   ports:
    - "5432:5432"
 
@@ -14,3 +15,5 @@ services:
    - "5000:5000"
   depends_on:
    - postgres
+  env_file:
+    - .env
