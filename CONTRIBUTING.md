@@ -22,7 +22,7 @@ Contributions are welcome. Keep changes minimal, clear, and aligned with the exi
 
 ```bash
 git checkout -b feature/your-feature-name
-````
+```
 
 3. Make your changes
 

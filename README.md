@@ -24,7 +24,7 @@ This repository is used to explore scalable architecture, modular design, and mu
 ```bash
 git clone https://github.com/rohitbytecode/learnTS.git
 cd learnTS
-````
+```
 
 ### Install dependencies
 
