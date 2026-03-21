@@ -13,6 +13,7 @@ interface RegisterOrgData {
 interface LoginData {
   email: string;
   password: string;
+  tenantId: string;
 }
 
 export const registerOrgAndAdmin = async (data: RegisterOrgData) => {
@@ -29,7 +30,7 @@ export const registerOrgAndAdmin = async (data: RegisterOrgData) => {
 
 export const loginUser = async (data: LoginData) => {
   const user = await prisma.user.findUnique({
-    where: { email: data.email },
+    where: { email_tenantId: { email: data.email, tenantId: data.tenantId } },
   });
 
   if (!user) {

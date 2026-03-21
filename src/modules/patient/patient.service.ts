@@ -7,3 +7,12 @@ export const getPatients = async (tenantId: string) => {
         }
     })
 }
+
+export const createPatient = async (data: any, tenantId: string) => {
+    return prisma.patient.create({
+        data: {
+            ...data,
+            tenantId
+        }
+    })
+}
