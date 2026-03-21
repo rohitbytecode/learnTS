@@ -6,6 +6,7 @@ import orgRoutes from "./modules/organization/org.routes";
 import patientRoutes from "./modules/patient/patient.routes";
 import userRoutes from "./modules/user/user.routes";
 import { errorHandler } from "./middleware/error.middleware";
+import { logger } from "./utils/logger";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use("/patients", patientRoutes);
 app.use("/users", userRoutes);
 
 app.get('/health', (_req, res) => {
+  logger.info({ event: "health_check", uptime: process.uptime() }, "Health check requested");
   res.status(200).json({
     status: 'ok',
     service: 'saas-backend',
@@ -28,13 +30,13 @@ app.get('/health', (_req, res) => {
 });
 
 app.get('/', (_req, res) => {
+  logger.info({ event: "root_endpoint" }, "Root endpoint accessed");
   res.status(200).json({
     success: true,
     message: "Backend is online",
   });
 });
 
-// Global error handler - must be the last middleware
 app.use(errorHandler);
 
 export default app;
