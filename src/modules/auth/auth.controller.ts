@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { loginUser, registerOrgAndAdmin } from "./auth.service";
 import { registerOrganizationSchema, loginSchema } from "../../validations/auth.validation";
 
-export const registerOrganization = async (req: Request, res: Response) => {
+export const registerOrganization = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validatedData = registerOrganizationSchema.parse(req.body);
 
@@ -20,11 +20,11 @@ export const registerOrganization = async (req: Request, res: Response) => {
       return res.status(400).json({ message: error.message });
     }
 
-    return res.status(500).json({ message: "Unexpected error" });
+    next(error);
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
@@ -38,6 +38,6 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: error.message });
     }
 
-    return res.status(500).json({ message: "Unexpected error" });
+    next(error);
   }
 };

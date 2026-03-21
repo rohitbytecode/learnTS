@@ -14,7 +14,7 @@ export const validateRequest =
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map((err) => ({
+        const formattedErrors = error.issues.map((err) => ({
           field: err.path.join("."),
           message: err.message,
         }));
@@ -33,7 +33,7 @@ export const validateRequest =
  * @returns Formatted error object
  */
 export const formatZodError = (error: ZodError) => {
-  const formattedErrors = error.errors.map((err) => ({
+  const formattedErrors = error.issues.map((err) => ({
     field: err.path.join("."),
     message: err.message,
     code: err.code,

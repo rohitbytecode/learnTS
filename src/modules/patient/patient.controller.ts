@@ -1,8 +1,8 @@
-import { Request, Response } from "express"
+import { Request, Response, NextFunction } from "express"
 import { getPatients, createPatient } from "./patient.service"
 import { createPatientSchema } from "../../validations/patient.validation"
 
-export const createPatientController = async (req: Request, res: Response) => {
+export const createPatientController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validatedData = createPatientSchema.parse(req.body)
 
@@ -15,15 +15,15 @@ export const createPatientController = async (req: Request, res: Response) => {
       }
       return res.status(400).json({ message: error.message })
     }
-    res.status(500).json({ message: "Unexpected error" })
+    next(error)
   }
 }
 
-export const getPatientsController = async (req: Request, res: Response) => {
+export const getPatientsController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const patients = await getPatients(req.tenantId!)
     res.json(patients)
   } catch (error: unknown) {
-    res.status(500).json({ message: "Unexpected error" })
+    next(error)
   }
 }

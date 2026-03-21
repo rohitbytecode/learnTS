@@ -5,6 +5,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import orgRoutes from "./modules/organization/org.routes";
 import patientRoutes from "./modules/patient/patient.routes";
 import userRoutes from "./modules/user/user.routes";
+import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
@@ -32,5 +33,8 @@ app.get('/', (_req, res) => {
     message: "Backend is online",
   });
 });
+
+// Global error handler - must be the last middleware
+app.use(errorHandler);
 
 export default app;

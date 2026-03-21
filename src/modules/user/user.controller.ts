@@ -1,8 +1,8 @@
-import { Request, Response } from "express"
+import { Request, Response, NextFunction } from "express"
 import { createUser, getUsers } from "./user.service"
 import { createUserSchema } from "../../validations/user.validation"
 
-export const createUserController = async (req: Request, res: Response) => {
+export const createUserController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validatedData = createUserSchema.parse(req.body)
 
@@ -20,15 +20,15 @@ export const createUserController = async (req: Request, res: Response) => {
       }
       return res.status(400).json({ message: error.message })
     }
-    return res.status(500).json({ message: "Unexpected error" })
+    next(error)
   }
 }
 
-export const getUsersController = async (req: Request, res: Response) => {
+export const getUsersController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await getUsers(req.tenantId!)
     return res.status(200).json(users)
   } catch (error: unknown) {
-    return res.status(500).json({ message: "Unexpected error" })
+    next(error)
   }
 }
