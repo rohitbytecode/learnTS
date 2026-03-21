@@ -2,6 +2,7 @@ import 'dotenv/config';
 import http from 'http';
 import app from './app'
 import { connectDB, closeDB } from './config/db';
+import { logger } from './utils/logger';
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -19,16 +20,23 @@ const startServer = async() => {
         }
 
         await connectDB();
-        //console.log("PostgreS connected successfully");
+        logger.info({ event: "database_connected" }, "Database connected successfully");
 
         server = http.createServer(app);
 
         server.listen(PORT, () => {
-            console.log(`Server is running in ${NODE_ENV} mode on port ${PORT}`);
+            logger.info({
+                event: "server_started",
+                port: PORT,
+                environment: NODE_ENV
+            }, `Server is running in ${NODE_ENV} mode on port ${PORT}`);
         });
     } catch (error: unknown) {
         if (error instanceof Error) {
-            console.log("Startup error: ", error.message);
+            logger.fatal({
+                event: "server_startup_failed",
+                error: error.message
+            }, "Server startup failed");
             process.exit(1);
         }
     }
@@ -40,15 +48,17 @@ const shutdownGracefully = (exitCode = 0) => {
     if (isShuttingDown) return;
     isShuttingDown = true;
 
+    logger.info({ event: "shutdown_initiated" }, "Graceful shutdown initiated");
+
     if (server) {
         server.close(async() => {
             await closeDB();
-            console.log("Server and DB closed gracefully");
+            logger.info({ event: "shutdown_complete" }, "Server and database closed gracefully");
             process.exit(exitCode);
         });
 
         setTimeout(() => {
-            console.error("Forced shutdown after timeout");
+            logger.error({ event: "shutdown_timeout" }, "Forced shutdown after timeout");
             process.exit(exitCode);
         }, 10000).unref();
     }
@@ -58,22 +68,28 @@ const shutdownGracefully = (exitCode = 0) => {
 };
 
 process.on("unhandledRejection", (err) => {
-    console.error("Unhandled Rejection: ", err);
+    logger.fatal({
+        event: "unhandled_rejection",
+        error: err
+    }, "Unhandled promise rejection");
     shutdownGracefully(1);
 });
 
 process.on("uncaughtException", (err) => {
-    console.error("Uncaught Exception: ", err);
+    logger.fatal({
+        event: "uncaught_exception",
+        error: err
+    }, "Uncaught exception");
     shutdownGracefully(1);
 });
 
 process.on("SIGTERM", () => {
-    console.log("SIGTERM received. Shutting down...");
+    logger.info({ event: "signal_received", signal: "SIGTERM" }, "SIGTERM received. Shutting down...");
     shutdownGracefully();
 });
 
 process.on("SIGINT", () => {
-    console.log("SIGINT received. Shutting down...");
+    logger.info({ event: "signal_received", signal: "SIGINT" }, "SIGINT received. Shutting down...");
     shutdownGracefully();
 });
 

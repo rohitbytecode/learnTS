@@ -34,8 +34,10 @@ model User {
 model Patient {
  id        String   @id @default(uuid())
  name      String
- age       Int
- diagnosis String
+ email     String?
+ phone     String?
+ age       Int?
+ medicalHistory String?
  tenantId  String
  createdAt DateTime @default(now())
 }

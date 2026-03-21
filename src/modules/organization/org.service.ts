@@ -29,3 +29,27 @@ export const registerOrganization = async (data: RegisterOrgData) => {
 
     return { org, user}
 }
+
+export const getOrganization = async (tenantId: string) => {
+    return prisma.organization.findUnique({
+        where: { id: tenantId },
+        include: {
+            users: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    createdAt: true
+                }
+            }
+        }
+    })
+}
+
+export const updateOrganization = async (tenantId: string, data: any) => {
+    return prisma.organization.update({
+        where: { id: tenantId },
+        data
+    })
+}
