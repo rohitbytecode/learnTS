@@ -13,5 +13,11 @@ export const createPatient = async (req: Request, res: Response) => {
 }
 
 export const getPatients = async (req: Request, res: Response) => {
-    const patients = await prisma
+    const patients = await prisma.patient.findMany({
+        where: {
+            tenantId: req.tenantId
+        }
+    })
+
+    res.json(patients)
 }

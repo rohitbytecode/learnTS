@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import authRoutes from "./modules/auth/auth.routes";
 import orgRoutes from "./modules/organization/org.routes";
+import patientRoutes from "./modules/patient/patient.routes";
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(helmet());
 
 app.use("/auth", authRoutes);
 app.use("/org", orgRoutes);
+app.use("/patients", patientRoutes);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({
