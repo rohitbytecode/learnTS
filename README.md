@@ -1,21 +1,14 @@
-```md
 # LearnTS
 
-Backend project built with TypeScript and Node.js, focused on implementing patterns used in real-world SaaS applications.
-
-This repository is used to explore scalable architecture, modular design, and multi-tenant concepts while keeping the codebase simple and maintainable.
-
----
+Backend project built with TypeScript and Node.js, focused on real-world SaaS architecture patterns such as modular design and multi-tenancy.
 
 ## Stack
 
 - TypeScript
 - Node.js
 - Express
-- PostgreSQL (planned / optional)
+- PostgreSQL (optional)
 - Docker
-
----
 
 ## Getting Started
 
@@ -24,7 +17,7 @@ This repository is used to explore scalable architecture, modular design, and mu
 ```bash
 git clone https://github.com/rohitbytecode/learnTS.git
 cd learnTS
-````
+```
 
 ### Install dependencies
 

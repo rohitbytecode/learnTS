@@ -1,4 +1,3 @@
-```md
 # Contributing
 
 Contributions are welcome. Keep changes minimal, clear, and aligned with the existing structure.
@@ -22,7 +21,7 @@ Contributions are welcome. Keep changes minimal, clear, and aligned with the exi
 
 ```bash
 git checkout -b feature/your-feature-name
-````
+```
 
 3. Make your changes
 
@@ -48,5 +47,3 @@ git push origin feature/your-feature-name
 * Ensure the project runs before creating a PR
 * Keep commit messages meaningful and concise
 * Avoid unrelated changes in a single PR
-
-```
