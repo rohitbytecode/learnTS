@@ -21,12 +21,14 @@ model Organization {
 model User {
  id           String   @id @default(uuid())
  name         String
- email        String   @unique
+ email        String
  password     String
  role         Role
  tenantId     String
  organization Organization @relation(fields: [tenantId], references: [id])
  createdAt    DateTime @default(now())
+
+ @@unique([email, tenantId])
 }
 
 model Patient {
