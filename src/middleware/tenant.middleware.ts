@@ -11,7 +11,7 @@ export const tenantMiddleware = (req: Request, res: Response, next: NextFunction
         return res.status(403).json({ message: "Tenant not found" })
     }
 
-    req.tenantId = tenantId
+    req.tenantId = tenantId as string;
 
     next()
 }
