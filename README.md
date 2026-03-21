@@ -1,4 +1,3 @@
-```md
 # LearnTS
 
 Backend project built with TypeScript and Node.js, focused on real-world SaaS architecture patterns such as modular design and multi-tenancy.
