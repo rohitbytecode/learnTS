@@ -36,3 +36,45 @@ export const getUsers = async (tenantId: string) => {
     }
   })
 }
+
+export const getUserById = async (id: string, tenantId: string) => {
+  return prisma.user.findFirst({
+    where: {
+      id,
+      tenantId
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true
+    }
+  })
+}
+
+export const updateUser = async (id: string, data: Partial<CreateUserData>, tenantId: string) => {
+  return prisma.user.update({
+    where: {
+      id,
+      tenantId
+    },
+    data,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      createdAt: true
+    }
+  })
+}
+
+export const deleteUser = async (id: string, tenantId: string) => {
+  return prisma.user.delete({
+    where: {
+      id,
+      tenantId
+    }
+  })
+}
