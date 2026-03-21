@@ -48,5 +48,3 @@ git push origin feature/your-feature-name
 * Ensure the project runs before creating a PR
 * Keep commit messages meaningful and concise
 * Avoid unrelated changes in a single PR
-
-```
