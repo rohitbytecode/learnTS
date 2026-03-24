@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import authRoutes from "./modules/auth/auth.routes";
-import orgRoutes from "./modules/organization/org.routes";
-import patientRoutes from "./modules/patient/patient.routes";
-import userRoutes from "./modules/user/user.routes";
-import { errorHandler } from "./middleware/error.middleware";
-import { logger } from "./utils/logger";
+import authRoutes from "@/modules/auth/auth.routes";
+import orgRoutes from "@/modules/organization/org.routes";
+import patientRoutes from "@/modules/patient/patient.routes";
+import userRoutes from "@/modules/user/user.routes";
+import { errorHandler } from "@/middleware/error.middleware";
+import { logger } from "@/utils/logger";
 
 const app = express();
 

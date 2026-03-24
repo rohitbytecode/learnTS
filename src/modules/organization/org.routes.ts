@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middleware/auth.middleware";
-import { tenantMiddleware } from "../../middleware/tenant.middleware";
-import { authorize } from "../../middleware/role.middleware";
+import { authMiddleware } from "@/middleware/auth.middleware";
+import { tenantMiddleware } from "@/middleware/tenant.middleware";
+import { authorize } from "@/middleware/role.middleware";
 import { registerOrganization } from "../auth/auth.controller";
 import { getOrganizationController, updateOrganizationController } from "./org.controller";
 

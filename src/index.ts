@@ -1,5 +1,5 @@
-import { startServer, shutdownGracefully } from "./server";
-import { logger } from "./utils/logger";
+import { startServer, shutdownGracefully } from "@/server";
+import { logger } from "@/utils/logger";
 
 const bootstrap = async () => {
   try {

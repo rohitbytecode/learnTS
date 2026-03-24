@@ -1,7 +1,7 @@
 import http from "http";
-import app from "./app";
-import { connectDB, closeDB } from "./config/db";
-import { logger } from "./utils/logger";
+import app from "@/app";
+import { connectDB, closeDB } from "@/config/db";
+import { logger } from "@/utils/logger";
 
 let server: http.Server | undefined;
 let isShuttingDown = false;

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { loginUser, registerOrgAndAdmin } from "./auth.service";
-import { registerOrganizationSchema, loginSchema } from "../../validations/auth.validation";
-import { logAuth, logError } from "../../utils/logger";
+import { registerOrganizationSchema, loginSchema } from "@/validations/auth.validation";
+import { logAuth, logError } from "@/utils/logger"
 
 export const registerOrganization = async (req: Request, res: Response, next: NextFunction) => {
   try {
