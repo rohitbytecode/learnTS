@@ -1,9 +1,8 @@
-import http from "http";
 import app from "@/app";
 import { connectDB, closeDB } from "@/config/db";
 import { logger } from "@/utils/logger";
 
-let server: http.Server | undefined;
+let server: ReturnType<typeof app.listen> | undefined;
 let isShuttingDown = false;
 
 export const startServer = async () => {
@@ -21,9 +20,7 @@ export const startServer = async () => {
   await connectDB();
   logger.info({ event: "database_connected" }, "Database connected successfully");
 
-  server = http.createServer(app);
-
-  server.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     logger.info(
       {
         event: "server_started",
