@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken'
-import "dotenv/config";
 import { Request, Response, NextFunction } from 'express'
 import { AuthPayload } from '../types/express'
 

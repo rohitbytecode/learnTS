@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { getOrganization, updateOrganization } from "./org.service";
-import { updateOrganizationSchema } from "../../validations/organization.validation";
-import { logError } from "../../utils/logger";
+import { updateOrganizationSchema } from "@/validations/organization.validation";
+import { logError } from "@/utils/logger";
 
 export const getOrganizationController = async (req: Request, res: Response, next: NextFunction) => {
   try {

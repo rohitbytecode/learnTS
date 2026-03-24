@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express"
 import { getPatients, createPatient, getPatientById, updatePatient, deletePatient } from "./patient.service"
-import { createPatientSchema, updatePatientSchema } from "../../validations/patient.validation"
-import { logPatient, logError } from "../../utils/logger"
+import { createPatientSchema, updatePatientSchema } from "@/validations/patient.validation"
+import { logPatient, logError } from "@/utils/logger"
 
 export const createPatientController = async (req: Request, res: Response, next: NextFunction) => {
   try {

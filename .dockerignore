@@ -6,4 +6,5 @@ dist
 .gitignore
 README.md
 Dockerfile
+*.md
 docker-compose*.yml

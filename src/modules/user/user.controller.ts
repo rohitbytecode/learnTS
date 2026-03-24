@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express"
 import { createUser, getUsers, getUserById, updateUser, deleteUser } from "./user.service"
-import { createUserSchema } from "../../validations/user.validation"
-import { logUser, logError } from "../../utils/logger"
+import { createUserSchema } from "@/validations/user.validation"
+import { logUser, logError } from "@/utils/logger"
 
 export const createUserController = async (req: Request, res: Response, next: NextFunction) => {
   try {

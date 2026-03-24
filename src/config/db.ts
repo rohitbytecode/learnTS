@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
@@ -17,12 +16,12 @@ export async function connectDB() {
     for(let attempt=1; attempt<= MAX_RETRIES; attempt++){
         try {
             await prisma.$connect();
-            await prisma.$queryRaw`Select 1`;
+            await prisma.$queryRaw`SELECT 1`;
 
             console.log("PostgreSQL connected successfully");
             return;
             
-        } catch(errror) {
+        } catch(error) {
             console.log(`DB connection failed (attempt ${attempt})`);
 
             if(attempt=== MAX_RETRIES) {
