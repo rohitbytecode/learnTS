@@ -1,42 +1,32 @@
+# base (used for multiple stagess)
 FROM node:20-alpine AS base
-
 WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
 
-COPY package*.json ./
-COPY prisma.config.ts ./
+#  deps 
+FROM base AS deps
 COPY prisma ./prisma
+RUN pnpm install --frozen-lockfile && pnpm prisma generate
 
+# builder
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm ci
+RUN pnpm build
 
+# dev 
 FROM base AS development
-
-RUN npx prisma generate
-
-CMD ["npm", "run", "dev"]
-
-FROM node:20-alpine AS builder
-
-WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci
-
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate
-RUN npm run build
+CMD ["pnpm", "dev"]
 
+# production
 FROM node:20-alpine AS production
-
 WORKDIR /app
-
-COPY package*.json ./
-RUN npm ci --omit=dev
-
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile && pnpm prisma generate
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY .env ./
-COPY prisma.config.ts ./
-
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+CMD ["node", "--env-file=.env", "dist/index.js"]

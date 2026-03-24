@@ -1,95 +1,58 @@
-import http from 'http';
-import app from './app'
-import { connectDB, closeDB } from './config/db';
-import { logger } from './utils/logger';
-
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
+import http from "http";
+import app from "./app";
+import { connectDB, closeDB } from "./config/db";
+import { logger } from "./utils/logger";
 
 let server: http.Server | undefined;
-
-const startServer = async() => {
-    try {
-        if (!process.env.DATABASE_URL) {
-            throw new Error("DATABASE_URL is missing in environment variables");
-        }
-
-        if (!process.env.JWT_SECRET) {
-            throw new Error("JWT_SECRET is missing in environment variables");
-        }
-
-        await connectDB();
-        logger.info({ event: "database_connected" }, "Database connected successfully");
-
-        server = http.createServer(app);
-
-        server.listen(PORT, () => {
-            logger.info({
-                event: "server_started",
-                port: PORT,
-                environment: NODE_ENV
-            }, `Server is running in ${NODE_ENV} mode on port ${PORT}`);
-        });
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            logger.fatal({
-                event: "server_startup_failed",
-                error: error.message
-            }, "Server startup failed");
-            process.exit(1);
-        }
-    }
-};
-
 let isShuttingDown = false;
 
-const shutdownGracefully = (exitCode = 0) => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
+export const startServer = async () => {
+  const PORT = process.env.PORT || 5000;
+  const NODE_ENV = process.env.NODE_ENV || "development";
 
-    logger.info({ event: "shutdown_initiated" }, "Graceful shutdown initiated");
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is missing in environment variables");
+  }
 
-    if (server) {
-        server.close(async() => {
-            await closeDB();
-            logger.info({ event: "shutdown_complete" }, "Server and database closed gracefully");
-            process.exit(exitCode);
-        });
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is missing in environment variables");
+  }
 
-        setTimeout(() => {
-            logger.error({ event: "shutdown_timeout" }, "Forced shutdown after timeout");
-            process.exit(exitCode);
-        }, 10000).unref();
-    }
-    else {
-        process.exit(exitCode);
-        }
+  await connectDB();
+  logger.info({ event: "database_connected" }, "Database connected successfully");
+
+  server = http.createServer(app);
+
+  server.listen(PORT, () => {
+    logger.info(
+      {
+        event: "server_started",
+        port: PORT,
+        environment: NODE_ENV,
+      },
+      `Server is running in ${NODE_ENV} mode on port ${PORT}`
+    );
+  });
 };
 
-process.on("unhandledRejection", (err) => {
-    logger.fatal({
-        event: "unhandled_rejection",
-        error: err
-    }, "Unhandled promise rejection");
-    shutdownGracefully(1);
-});
+export const shutdownGracefully = async (exitCode = 0) => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
 
-process.on("uncaughtException", (err) => {
-    logger.fatal({
-        event: "uncaught_exception",
-        error: err
-    }, "Uncaught exception");
-    shutdownGracefully(1);
-});
+  logger.info({ event: "shutdown_initiated" }, "Graceful shutdown initiated");
 
-process.on("SIGTERM", () => {
-    logger.info({ event: "signal_received", signal: "SIGTERM" }, "SIGTERM received. Shutting down...");
-    shutdownGracefully();
-});
+  if (server) {
+    server.close(async () => {
+      await closeDB();
+      logger.info({ event: "shutdown_complete" }, "Shutdown complete");
+      process.exit(exitCode);
+    });
 
-process.on("SIGINT", () => {
-    logger.info({ event: "signal_received", signal: "SIGINT" }, "SIGINT received. Shutting down...");
-    shutdownGracefully();
-});
-
-startServer();
+    setTimeout(() => {
+      logger.error({ event: "shutdown_timeout" }, "Forced shutdown");
+      process.exit(exitCode);
+    }, 10000).unref();
+  } else {
+    process.exit(exitCode);
+  }
+};
