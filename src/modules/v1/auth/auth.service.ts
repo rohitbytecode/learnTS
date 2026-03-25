@@ -1,7 +1,7 @@
 import { prisma } from "@/config/db";
 import { comparePassword } from "@/utils/hash";
 import { generateToken } from "@/utils/jwt";
-import { registerOrganization } from "@/modules/organization/org.service";
+import { registerOrganization } from "@/modules/v1/organization/org.service";
 
 interface RegisterOrgData {
   orgName: string;
