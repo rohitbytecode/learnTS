@@ -1,10 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import authRoutes from "@/modules/auth/auth.routes";
-import orgRoutes from "@/modules/organization/org.routes";
-import patientRoutes from "@/modules/patient/patient.routes";
-import userRoutes from "@/modules/user/user.routes";
+import v1Routes from "@/routes/v1"
 import { errorHandler } from "@/middleware/error.middleware";
 import { logger } from "@/utils/logger";
 
@@ -14,10 +11,7 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 
-app.use("/auth", authRoutes);
-app.use("/org", orgRoutes);
-app.use("/patients", patientRoutes);
-app.use("/users", userRoutes);
+app.use("/api/v1", v1Routes);
 
 app.get('/health', (_req, res) => {
   logger.info({ event: "health_check", uptime: process.uptime() }, "Health check requested");
