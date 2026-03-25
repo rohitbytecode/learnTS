@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { asyncHandler } from "@/utils/asyncHandler";
 import { authMiddleware } from "@/middleware/auth.middleware";
 import { tenantMiddleware } from "@/middleware/tenant.middleware";
 import { authorize } from "@/middleware/role.middleware";
@@ -7,7 +8,7 @@ import { getOrganizationController, updateOrganizationController } from "./org.c
 
 const router = Router();
 
-router.post("/register", registerOrganization);
+router.post("/register", asyncHandler(registerOrganization));
 
 router.use(authMiddleware);
 router.use(tenantMiddleware);
