@@ -4,12 +4,34 @@ import helmet from "helmet";
 import v1Routes from "@/routes/v1"
 import { errorHandler } from "@/middleware/error.middleware";
 import { logger } from "@/utils/logger";
+import { STATUS_CODES } from "node:http";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
+// response status + duration
+app.use((req, res, next)=> {
+  const start = Date.now();
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+  
+    logger.info({
+      event: "incoming_request",
+      method: req.method,
+      url: req.url,
+      statusCode: res.statusCode,
+      duration
+    });
+  });
+  next();
+});
 
 app.use("/api/v1", v1Routes);
 
@@ -17,6 +39,7 @@ app.get('/health', (_req, res) => {
   logger.info({ event: "health_check", uptime: process.uptime() }, "Health check requested");
   res.status(200).json({
     status: 'ok',
+    database: 'connected',
     service: 'saas-backend',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
