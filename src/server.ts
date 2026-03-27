@@ -1,20 +1,10 @@
 import app from "@/app";
 import { connectDB, closeDB } from "@/config/db";
 import { logger } from "@/utils/logger";
-import { z } from 'zod';
+import { env } from "@/config/env";
 
 let server: ReturnType<typeof app.listen> | undefined;
 let isShuttingDown = false;
-
-const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
-  POSTGRES_PASSWORD: z.string().min(1),
-  JWT_SECRET: z.string().min(10),
-  NODE_ENV: z.enum(["development", "production", "test"]),
-  PORT: z.string().optional(),
-});
-
-const env = envSchema.parse(process.env);
 
 export const startServer = async () => {
 
@@ -23,7 +13,7 @@ export const startServer = async () => {
 
   if(!Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");
 
-  const NODE_ENV = env.NODE_ENV || "development";
+  const NODE_ENV = env.NODE_ENV;
 
   await connectDB();
   logger.info({ event: "database_connected" }, "Database connected successfully");
@@ -39,7 +29,7 @@ export const startServer = async () => {
     );
   });
 
-  server.on("error", (error) => {
+  server.on("error", (error: NodeJS.ErrnoException) => {
     logger.fatal(
       { event: "server_error", error: error },
       "Server encountered an error"
