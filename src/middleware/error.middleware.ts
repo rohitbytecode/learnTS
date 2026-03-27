@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { logger } from "@/utils/logger";
 import { errorResponse } from "@/utils/apiResponse";
+import { env } from "@/config/env";
 
 export const errorHandler = (
   err: any,
@@ -16,17 +17,17 @@ export const errorHandler = (
       path: req.originalUrl,
       method: req.method,
       error: err.message,
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      stack: env.NODE_ENV === "development" ? err.stack : undefined,
     },
     "Error Handled"
   );
 
   const message =
-    process.env.NODE_ENV === "production"
+      env.NODE_ENV === "production"
       ? "Internal Server Error"
       : err.message;
 
   res.status(statusCode).json(
-    errorResponse(message, process.env.NODE_ENV !== "production" ? err : undefined)
+    errorResponse(message, env.NODE_ENV !== "production" ? err : undefined)
   );
 };
