@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express"
 import { createUser, getUsers, getUserById, updateUser, deleteUser } from "./user.service"
 import { createUserSchema } from "@/validations/user.validation"
 import { logUser, logError } from "@/utils/logger"
+import { successResponse } from "@/utils/apiResponse"
 
 export const createUserController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -11,7 +12,7 @@ export const createUserController = async (req: Request, res: Response, next: Ne
 
     logUser.created(validatedData.email, validatedData.role, req.tenantId!)
 
-    return res.status(201).json({ user, generatedPassword })
+    return res.status(201).json(successResponse({ user, generatedPassword }, "User created successfully"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.name === "ZodError") {
@@ -38,7 +39,7 @@ export const getUsersController = async (req: Request, res: Response, next: Next
 
     logUser.retrieved(users.length, req.tenantId!)
 
-    return res.status(200).json(users)
+    return res.status(200).json(successResponse(users,"Users retrieved successfully"));
   } catch (error: unknown) {
     logError.general(error as Error, "Users retrieval")
     next(error)
@@ -54,7 +55,7 @@ export const getUserController = async (req: Request, res: Response, next: NextF
       return res.status(404).json({ message: "User not found" })
     }
 
-    return res.json(user)
+    return res.json(successResponse(user, "User retrieved successfully"));
   } catch (error: unknown) {
     logError.general(error as Error, "User retrieval by ID")
     next(error)
@@ -68,7 +69,7 @@ export const updateUserController = async (req: Request, res: Response, next: Ne
 
     const user = await updateUser(id as string, validatedData, req.tenantId!)
 
-    return res.json(user)
+    return res.json(successResponse(user, "User updated successfuly"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.name === "ZodError") {

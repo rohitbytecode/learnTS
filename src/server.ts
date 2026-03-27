@@ -1,40 +1,19 @@
 import app from "@/app";
 import { connectDB, closeDB } from "@/config/db";
 import { logger } from "@/utils/logger";
-import { z } from 'zod';
+import { env } from "@/config/env";
 
 let server: ReturnType<typeof app.listen> | undefined;
 let isShuttingDown = false;
 
-const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
-  POSTGRES_PASSWORD: z.string().min(1),
-  JWT_SECRET: z.string().min(10),
-  NODE_ENV: z.enum(["development", "production", "test"]),
-  PORT: z.string().optional(),
-});
-
-const env = envSchema.parse(process.env);
-
-const REQUIRED_ENV_VARS = ['DATABASE_URL','POSTGRES_PASSWORD','JWT_SECRET','NODE_ENV'] as const;
-
-const validateEnv = () => {
-  const missing = REQUIRED_ENV_VARS.filter(key => !process.env[key]);
-  if(missing.length> 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
-  }
-}
-
 export const startServer = async () => {
 
-  validateEnv();
-
-  const rawPort = process.env.PORT || '5000';
+  const rawPort = env.PORT || '5000';
   const PORT = Number(rawPort);
 
   if(!Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");
 
-  const NODE_ENV = process.env.NODE_ENV || "development";
+  const NODE_ENV = env.NODE_ENV;
 
   await connectDB();
   logger.info({ event: "database_connected" }, "Database connected successfully");
@@ -48,6 +27,14 @@ export const startServer = async () => {
       },
       `Server is running in ${NODE_ENV} mode on port ${PORT}`
     );
+  });
+
+  server.on("error", (error: NodeJS.ErrnoException) => {
+    logger.fatal(
+      { event: "server_error", error: error },
+      "Server encountered an error"
+    );
+    shutdownGracefully(1);
   });
 };
 

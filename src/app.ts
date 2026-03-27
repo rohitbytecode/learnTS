@@ -4,7 +4,7 @@ import helmet from "helmet";
 import v1Routes from "@/routes/v1"
 import { errorHandler } from "@/middleware/error.middleware";
 import { logger } from "@/utils/logger";
-import { STATUS_CODES } from "node:http";
+import { successResponse } from "./utils/apiResponse";
 
 const app = express();
 
@@ -15,6 +15,16 @@ app.use(
     crossOriginResourcePolicy: false,
   })
 );
+
+app.use((req, _res, next) => {
+  logger.info({
+    event: "incoming_request",
+    method: req.method,
+    url: req.url,
+  });
+  next();
+});
+
 // response status + duration
 app.use((req, res, next)=> {
   const start = Date.now();
@@ -23,11 +33,11 @@ app.use((req, res, next)=> {
     const duration = Date.now() - start;
   
     logger.info({
-      event: "incoming_request",
+      event: "request_completed",
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
-      duration
+      duration,
     });
   });
   next();
@@ -37,21 +47,19 @@ app.use("/api/v1", v1Routes);
 
 app.get('/health', (_req, res) => {
   logger.info({ event: "health_check", uptime: process.uptime() }, "Health check requested");
-  res.status(200).json({
+  res.status(200).json(successResponse({
     status: 'ok',
     database: 'connected',
     service: 'saas-backend',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
-  });
+  }));
 });
 
 app.get('/', (_req, res) => {
   logger.info({ event: "root_endpoint" }, "Root endpoint accessed");
-  res.status(200).json({
-    success: true,
-    message: "Backend is online",
-  });
+  res.status(200).json
+  (successResponse(null, "Backend is online"));
 });
 
 app.use(errorHandler);
