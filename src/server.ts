@@ -16,25 +16,14 @@ const envSchema = z.object({
 
 const env = envSchema.parse(process.env);
 
-const REQUIRED_ENV_VARS = ['DATABASE_URL','POSTGRES_PASSWORD','JWT_SECRET','NODE_ENV'] as const;
-
-const validateEnv = () => {
-  const missing = REQUIRED_ENV_VARS.filter(key => !process.env[key]);
-  if(missing.length> 0) {
-    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
-  }
-}
-
 export const startServer = async () => {
 
-  validateEnv();
-
-  const rawPort = process.env.PORT || '5000';
+  const rawPort = env.PORT || '5000';
   const PORT = Number(rawPort);
 
   if(!Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");
 
-  const NODE_ENV = process.env.NODE_ENV || "development";
+  const NODE_ENV = env.NODE_ENV || "development";
 
   await connectDB();
   logger.info({ event: "database_connected" }, "Database connected successfully");
@@ -48,6 +37,14 @@ export const startServer = async () => {
       },
       `Server is running in ${NODE_ENV} mode on port ${PORT}`
     );
+  });
+
+  server.on("error", (error) => {
+    logger.fatal(
+      { event: "server_error", error: error },
+      "Server encountered an error"
+    );
+    shutdownGracefully(1);
   });
 };
 
