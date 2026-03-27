@@ -5,7 +5,7 @@ const envSchema = z.object({
     DATABASE_URL: z.string().min(1),
     POSTGRES_PASSWORD: z.string().min(1),
     JWT_SECRET: z.string().min(10),
-    NODE_ENV: z.enum(['development', 'production', 'test']),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default("development"),
     PORT: z.string().optional(),
 });
 
