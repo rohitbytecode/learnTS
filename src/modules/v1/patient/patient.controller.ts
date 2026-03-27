@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express"
 import { getPatients, createPatient, getPatientById, updatePatient, deletePatient } from "./patient.service"
 import { createPatientSchema, updatePatientSchema } from "@/validations/patient.validation"
 import { logPatient, logError } from "@/utils/logger"
+import { successResponse } from "@/utils/apiResponse"
 
 export const createPatientController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -11,7 +12,7 @@ export const createPatientController = async (req: Request, res: Response, next:
 
     logPatient.created(validatedData.name, req.tenantId!)
 
-    res.status(201).json(patient)
+    res.status(201).json(successResponse(patient, "Patient created successfully"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.name === "ZodError") {
@@ -32,7 +33,7 @@ export const getPatientsController = async (req: Request, res: Response, next: N
 
     logPatient.retrieved(patients.length, req.tenantId!)
 
-    res.json(patients)
+    res.json(successResponse(patients, "Patient retrieved successfully"));
   } catch (error: unknown) {
     logError.general(error as Error, "Patients retrieval")
     next(error)
@@ -48,7 +49,7 @@ export const getPatientController = async (req: Request, res: Response, next: Ne
       return res.status(404).json({ message: "Patient not found" })
     }
 
-    res.json(patient)
+    res.json(successResponse(patient, "Patient retrieved successfully"));
   } catch (error: unknown) {
     logError.general(error as Error, "Patient retrieval by ID")
     next(error)
@@ -62,7 +63,7 @@ export const updatePatientController = async (req: Request, res: Response, next:
 
     const patient = await updatePatient(id as string, validatedData, req.tenantId!)
 
-    res.json(patient)
+    res.json(successResponse(patient, "Patient updated successfully"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.name === "ZodError") {

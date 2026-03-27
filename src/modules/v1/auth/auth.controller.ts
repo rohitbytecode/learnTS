@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { loginUser, registerOrgAndAdmin } from "./auth.service";
 import { registerOrganizationSchema, loginSchema } from "@/validations/auth.validation";
 import { logAuth, logError } from "@/utils/logger"
+import { successResponse } from "@/utils/apiResponse";
 
 export const registerOrganization = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -11,7 +12,7 @@ export const registerOrganization = async (req: Request, res: Response, next: Ne
 
     logAuth.registration(validatedData.email, validatedData.orgName);
 
-    return res.status(201).json({ org, user, token });
+    return res.status(201).json(successResponse({ org, user, token }, "Organization registered successfully"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       const isUniqueError = error.message.includes("Unique constraint") || error.message.includes("Unique constraint failed");
@@ -40,7 +41,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     logAuth.loginAttempt(validatedData.email, true, validatedData.tenantId);
 
-    return res.status(200).json({ user, token });
+    return res.status(200).json(successResponse({ user, token }, "Login successful "));
   } catch (error: unknown) {
     if (error instanceof Error) {
       const email = (req.body as any)?.email || "unknown";

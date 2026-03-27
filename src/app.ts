@@ -23,11 +23,11 @@ app.use((req, res, next)=> {
     const duration = Date.now() - start;
   
     logger.info({
-      event: "incoming_request",
+      event: "request_completed",
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
-      duration
+      duration,
     });
   });
   next();

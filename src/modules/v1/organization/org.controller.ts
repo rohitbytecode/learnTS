@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { getOrganization, updateOrganization } from "./org.service";
 import { updateOrganizationSchema } from "@/validations/organization.validation";
 import { logError } from "@/utils/logger";
+import { successResponse } from "@/utils/apiResponse";
 
 export const getOrganizationController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -11,7 +12,7 @@ export const getOrganizationController = async (req: Request, res: Response, nex
       return res.status(404).json({ message: "Organization not found" });
     }
 
-    res.json(organization);
+    res.json(successResponse(organization, "Organization retrieved successfully"));
   } catch (error: unknown) {
     logError.general(error as Error, "Organization retrieval");
     next(error);
@@ -24,7 +25,7 @@ export const updateOrganizationController = async (req: Request, res: Response, 
 
     const organization = await updateOrganization(req.tenantId!, validatedData);
 
-    res.json(organization);
+    res.json(successResponse(organization, "Organization updated successfully"));
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.name === "ZodError") {
