@@ -5,6 +5,7 @@ import v1Routes from "@/routes/v1"
 import { errorHandler } from "@/middleware/error.middleware";
 import { logger } from "@/utils/logger";
 import { successResponse } from "./utils/apiResponse";
+import { globalRateLimiter } from "./middleware/rateLimit.middleware";
 
 const app = express();
 
@@ -24,6 +25,8 @@ app.use((req, _res, next) => {
   });
   next();
 });
+
+app.use(globalRateLimiter);
 
 // response status + duration
 app.use((req, res, next)=> {

@@ -5,10 +5,11 @@ import { tenantMiddleware } from "@/middleware/tenant.middleware";
 import { authorize } from "@/middleware/role.middleware";
 import { registerOrganization } from "../auth/auth.controller";
 import { getOrganizationController, updateOrganizationController } from "./org.controller";
+import { authRateLimiter } from "@/middleware/rateLimit.middleware";
 
 const router = Router();
 
-router.post("/register", asyncHandler(registerOrganization));
+router.post("/register", authRateLimiter, asyncHandler(registerOrganization));
 
 router.use(authMiddleware);
 router.use(tenantMiddleware);
