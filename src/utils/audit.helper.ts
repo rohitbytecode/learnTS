@@ -7,7 +7,8 @@ interface AuditOptions {
 }
 
 export const audit = (req: Request, { action, metadata }: AuditOptions) => {
-    logAuditEvent({
+    try {
+        logAuditEvent({
         action,
         traceId: req.traceId,
         userId: (req as any).user?.id,
@@ -16,7 +17,8 @@ export const audit = (req: Request, { action, metadata }: AuditOptions) => {
             userAgent: req.headers["user-agent"],
             ...metadata,
         },
-    }).catch(() => {
-        // if audit fails, still req flow will continue
     });
+    } catch{
+        // if audit fails, still req flow will continue
+    };
 };

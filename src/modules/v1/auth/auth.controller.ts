@@ -104,6 +104,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         metadata: {
           email,
           tenantId,
+          userAgent: req.headers["user-agent"],
           reason: error instanceof Error ? error.message : "unknown",
           ip: req.ip,
         },

@@ -1,3 +1,4 @@
+import { insertAuditLog } from "@/repositories/audit.repository";
 import { logger } from "@/utils/logger";
 
 interface AuditLog {
@@ -7,17 +8,14 @@ interface AuditLog {
     traceId?: string;
 }
 
-export const logAuditEvent = ({
-    action,
-    userId,
-    metadata,
-    traceId,
-}: AuditLog) => {
-    logger.info({
-        event: "audit_log",
-        action,
-        userId,
-        metadata,
-        traceId,
-    });
+export const logAuditEvent = async (data: AuditLog) => {
+    try {
+        await insertAuditLog(data);
+    } catch (error) {
+        logger.error({
+            event: "audit_db_failed",
+            error,
+            fallback: data,
+        }, "Audit DB insert failed");
+    }
 };
