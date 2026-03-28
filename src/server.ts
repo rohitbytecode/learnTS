@@ -8,7 +8,7 @@ let isShuttingDown = false;
 
 export const startServer = async () => {
 
-  const rawPort = env.PORT || '5000';
+  const rawPort = env.PORT;
   const PORT = Number(rawPort);
 
   if(!Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");

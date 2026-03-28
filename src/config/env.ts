@@ -6,7 +6,7 @@ const envSchema = z.object({
     POSTGRES_PASSWORD: z.string().min(1),
     JWT_SECRET: z.string().min(10),
     NODE_ENV: z.enum(['development', 'production', 'test']).default("development"),
-    PORT: z.string().optional(),
+    PORT: z.coerce.number().default(5000),
 });
 
 const parsed = envSchema.safeParse(process.env);
