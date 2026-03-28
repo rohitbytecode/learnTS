@@ -3,6 +3,9 @@ import { createUser, getUsers, getUserById, updateUser, deleteUser } from "./use
 import { createUserSchema } from "@/validations/user.validation"
 import { logUser, logError } from "@/utils/logger"
 import { successResponse } from "@/utils/apiResponse"
+import { audit } from "@/utils/audit.helper"
+import { AUDIT_ACTIONS } from "@/constants/auditActions"
+import { readSync } from "node:fs"
 
 export const createUserController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -12,8 +15,28 @@ export const createUserController = async (req: Request, res: Response, next: Ne
 
     logUser.created(validatedData.email, validatedData.role, req.tenantId!)
 
+    audit(req, {
+      action: AUDIT_ACTIONS.USER_CREATED,
+      metadata: {
+        tenantId: req.tenantId,
+        createUserId: user.id,
+        email: validatedData.email,
+        role: validatedData.role,
+      },
+    });
+
     return res.status(201).json(successResponse({ user, generatedPassword }, "User created successfully"));
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.USER_CREATE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        email: (req.body as any)?.email,
+        reason: error instanceof Error ? error.message : "unknown",
+      },
+    });
+
     if (error instanceof Error) {
       if (error.name === "ZodError") {
         logError.validation(error, "/users")
@@ -69,8 +92,26 @@ export const updateUserController = async (req: Request, res: Response, next: Ne
 
     const user = await updateUser(id as string, validatedData, req.tenantId!)
 
+    audit(req, {
+      action: AUDIT_ACTIONS.USER_UPDATED,
+      metadata: {
+        tenantId: req.tenantId,
+        updateUserId: id,
+        updatedFields: Object.keys(validatedData),
+      },
+    });
+
     return res.json(successResponse(user, "User updated successfuly"));
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.USER_UPDATE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        userId: (req.body as any)?.id,
+        reason: error instanceof Error ? error.message : "unknown",
+      }
+    })
     if (error instanceof Error) {
       if (error.name === "ZodError") {
         logError.validation(error, "/users/:id")
@@ -88,9 +129,27 @@ export const deleteUserController = async (req: Request, res: Response, next: Ne
   try {
     const { id } = req.params
     await deleteUser(id as string, req.tenantId!)
+    
+    audit(req, {
+      action: AUDIT_ACTIONS.USER_DELETED,
+      metadata: {
+        tenantId: req.tenantId,
+        deleteUserId: id,
+      },
+    });
 
     return res.status(204).send()
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.USER_DELETE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        userId: (req.body as any)?.id,
+        reason: error instanceof Error ? error.message : "unknown",
+      },
+    });
+
     logError.general(error as Error, "User deletion")
     next(error)
   }

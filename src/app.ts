@@ -2,10 +2,13 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import v1Routes from "@/routes/v1"
-import { errorHandler } from "@/middleware/error.middleware";
+
 import { logger } from "@/utils/logger";
 import { successResponse } from "./utils/apiResponse";
+
+import { errorHandler } from "@/middleware/error.middleware";
 import { globalRateLimiter } from "./middleware/rateLimit.middleware";
+import { traceMiddleware } from "./middleware/trace.middleware";
 
 const app = express();
 
@@ -17,9 +20,12 @@ app.use(
   })
 );
 
+app.use(traceMiddleware);
+
 app.use((req, _res, next) => {
   logger.info({
     event: "incoming_request",
+    traceId: req.traceId,
     method: req.method,
     url: req.url,
   });
@@ -37,6 +43,7 @@ app.use((req, res, next)=> {
   
     logger.info({
       event: "request_completed",
+      traceId: req.traceId,
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,

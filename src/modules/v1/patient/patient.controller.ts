@@ -3,6 +3,8 @@ import { getPatients, createPatient, getPatientById, updatePatient, deletePatien
 import { createPatientSchema, updatePatientSchema } from "@/validations/patient.validation"
 import { logPatient, logError } from "@/utils/logger"
 import { successResponse } from "@/utils/apiResponse"
+import { audit } from "@/utils/audit.helper"
+import { AUDIT_ACTIONS } from "@/constants/auditActions"
 
 export const createPatientController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -12,8 +14,27 @@ export const createPatientController = async (req: Request, res: Response, next:
 
     logPatient.created(validatedData.name, req.tenantId!)
 
+    audit(req, {
+      action: AUDIT_ACTIONS.PATIENT_CREATED,
+      metadata: {
+        tenantId: req.tenantId,
+        patientId: patient.id,
+        name: validatedData.name,
+      },
+    });
+
     res.status(201).json(successResponse(patient, "Patient created successfully"));
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.PATIENT_CREATE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        name: (req.body as any)?.name,
+        reason: error instanceof Error ? error.message : "unknown",
+      },
+    });
+
     if (error instanceof Error) {
       if (error.name === "ZodError") {
         logError.validation(error, "/patients")
@@ -63,8 +84,27 @@ export const updatePatientController = async (req: Request, res: Response, next:
 
     const patient = await updatePatient(id as string, validatedData, req.tenantId!)
 
+    audit(req, {
+      action: AUDIT_ACTIONS.PATIENT_UPDATED,
+      metadata: {
+        tenantId: req.tenantId,
+        patientId: id,
+        updatedFields: Object.keys(validatedData),
+      },
+    });
+
     res.json(successResponse(patient, "Patient updated successfully"));
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.PATIENT_UPDATE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        patientId: (req.body as any)?.id,
+        reason: error instanceof Error ? error.message : "unknown",
+      },
+    });
+
     if (error instanceof Error) {
       if (error.name === "ZodError") {
         logError.validation(error, "/patients/:id")
@@ -83,8 +123,26 @@ export const deletePatientController = async (req: Request, res: Response, next:
     const { id } = req.params
     await deletePatient(id as string, req.tenantId!)
 
+    audit(req, {
+      action: AUDIT_ACTIONS.PATIENT_DELETED,
+      metadata: {
+        tenantId: req.tenantId,
+        patientId: id,
+      },
+    });
+
     res.status(204).send()
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.PATIENT_DELETE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        patientId: (req.body as any)?.id,
+        reason: error instanceof Error ? error.message : "unknown",
+      },
+    });
+
     logError.general(error as Error, "Patient deletion")
     next(error)
   }

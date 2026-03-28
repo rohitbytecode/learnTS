@@ -3,6 +3,8 @@ import { getOrganization, updateOrganization } from "./org.service";
 import { updateOrganizationSchema } from "@/validations/organization.validation";
 import { logError } from "@/utils/logger";
 import { successResponse } from "@/utils/apiResponse";
+import { audit } from "@/utils/audit.helper";
+import { AUDIT_ACTIONS } from "@/constants/auditActions";
 
 export const getOrganizationController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -25,8 +27,25 @@ export const updateOrganizationController = async (req: Request, res: Response, 
 
     const organization = await updateOrganization(req.tenantId!, validatedData);
 
+    audit(req, {
+      action: AUDIT_ACTIONS.ORG_UPDATED,
+      metadata: {
+        tenantId: req.tenantId,
+        updatedFields: Object.keys(validatedData),
+      },
+    });
+
     res.json(successResponse(organization, "Organization updated successfully"));
   } catch (error: unknown) {
+
+    audit(req, {
+      action: AUDIT_ACTIONS.ORG_UPDATE_FAILED,
+      metadata: {
+        tenantId: req.tenantId,
+        reason: error instanceof Error ? error.message : "unknown",
+      },
+    });
+    
     if (error instanceof Error) {
       if (error.name === "ZodError") {
         logError.validation(error, "/org");

@@ -9,6 +9,7 @@ declare global {
         role: string
       }
       tenantId?: string
+      traceId?: string;
     }
   }
 }
