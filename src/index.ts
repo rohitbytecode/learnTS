@@ -18,8 +18,8 @@ const bootstrap = async () => {
   }
 };
 
-process.on("unhandledRejection", (err) => {
-  logger.fatal({ event: "unhandled_rejection", error: err });
+process.on("unhandledRejection", (err, promise) => {
+  logger.fatal({ event: "unhandled_rejection", error: err, promise: String(promise) });
   shutdownGracefully(1);
 });
 
@@ -38,4 +38,7 @@ process.on("SIGINT", () => {
   shutdownGracefully();
 });
 
-bootstrap();
+bootstrap().catch((err) => {
+  logger.fatal({ event: "bootstrap_error", error:err });
+  process.exit(1);
+});
