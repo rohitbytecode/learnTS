@@ -6,6 +6,36 @@ import { env } from "@/config/env";
 let server: ReturnType<typeof app.listen> | undefined;
 let isShuttingDown = false;
 
+const withRetry = async <T>(
+  fn: () => Promise<T>,
+  label: string,
+  maxAttempts = 3,
+  baseDelayMs = 1000
+): Promise<T> => {
+  for (let attempt = 1; attempt<= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isLastAttempt = attempt === maxAttempts;
+      if (isLastAttempt) {
+        logger.fatal(
+          { event: `${label}_failed`, attempt, error: err },
+          `${label} failed after ${maxAttempts} attempts`
+        );
+        throw err;
+      }
+
+      const delayMs = baseDelayMs * 2 ** (attempt - 1);
+      logger.warn(
+        { event: `${label}_retry`, attempt, nextRetryMs: delayMs, error:err },
+        `${label} failed on attempt ${attempt}, retrying in ${delayMs}ms...`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  throw new Error(`${label} failed after ${maxAttempts} attempts`);
+};
+
 export const startServer = async () => {
 
   const rawPort = env.PORT;
@@ -15,24 +45,24 @@ export const startServer = async () => {
 
   const NODE_ENV = env.NODE_ENV;
 
-  await connectDB();
-  logger.info({ event: "database_connected" }, "Database connected successfully");
+  await withRetry(() => connectDB(), "db_connected");
+  logger.info({ event: "db_connected" }, "Database connected successfully");
 
-  await new Promise<void>((resolve, reject)=> {
-  server = app.listen(PORT, () => {
-    logger.info(
-      {
-        event: "server_started",
-        port: PORT,
-        environment: NODE_ENV,
-      },
-      `Server is running in ${NODE_ENV} mode on port ${PORT}`
-    );
-    server!.removeListener("error", reject);
-    resolve();
-  });
-    server.once("error", reject);
-});
+  await withRetry(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        server = app.listen(PORT, () => {
+          logger.info(
+            { event: "server_started", port: PORT, environment: NODE_ENV },
+            `Server is running in ${NODE_ENV} mode on port ${PORT}`
+          );
+          server!.removeListener("error", reject);
+          resolve();
+        });
+        server.once("error", reject);
+      }),
+      "server_listen"
+  );
 
   server!.on("error", (error: NodeJS.ErrnoException) => {
     logger.fatal(
