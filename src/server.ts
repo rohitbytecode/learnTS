@@ -11,13 +11,14 @@ export const startServer = async () => {
   const rawPort = env.PORT;
   const PORT = Number(rawPort);
 
-  if(!Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");
+  if(!Number.isFinite(PORT) || !Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");
 
   const NODE_ENV = env.NODE_ENV;
 
   await connectDB();
   logger.info({ event: "database_connected" }, "Database connected successfully");
 
+  await new Promise<void>((resolve, reject)=> {
   server = app.listen(PORT, () => {
     logger.info(
       {
@@ -27,9 +28,13 @@ export const startServer = async () => {
       },
       `Server is running in ${NODE_ENV} mode on port ${PORT}`
     );
+    server!.removeListener("error", reject);
+    resolve();
   });
+    server.once("error", reject);
+});
 
-  server.on("error", (error: NodeJS.ErrnoException) => {
+  server!.on("error", (error: NodeJS.ErrnoException) => {
     logger.fatal(
       { event: "server_error", error: error },
       "Server encountered an error"
@@ -45,7 +50,11 @@ export const shutdownGracefully = async (exitCode = 0) => {
   logger.info({ event: "shutdown_initiated" }, "Graceful shutdown initiated");
 
   if (server) {
-    server.close(async () => {
+    const activeServer = server;
+
+    activeServer.closeAllConnections?.();
+    
+    activeServer.close(async () => {
       try {
         await closeDB();
         logger.info({ event: "shutdown_complete" }, "Shutdown complete");
@@ -58,7 +67,7 @@ export const shutdownGracefully = async (exitCode = 0) => {
 
     setTimeout(() => {
       logger.error({ event: "shutdown_timeout" }, "Forced shutdown");
-      process.exit(exitCode);
+      process.exit(1);
     }, 10000).unref();
   } else {
     process.exit(exitCode);

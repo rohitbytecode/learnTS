@@ -20,11 +20,22 @@ app.use(
 );
 app.use(
   cors({
-  origin: env.ALLOWED_ORIGINS?.split(",") ?? [],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    const allowed = env.ALLOWED_ORIGINS
+    ?.split(",")
+    .map(o => o.trim())
+    .filter(Boolean) ?? [];
+    
+    if(allowed.includes(origin)) return callback(null, true);
+
+    callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
   })
 );
-app.use(express.json({ limit: "10kb"} ));
+app.use(express.json({ limit: "100kb"} ));
 
 app.use(traceMiddleware);
 
@@ -34,6 +45,8 @@ app.use((req, _res, next) => {
     traceId: req.traceId,
     method: req.method,
     url: req.url,
+    ip: req.ip,
+    userAgent: req.headers["user-agent"],
   });
   next();
 });
@@ -53,6 +66,14 @@ app.use((req, res, next)=> {
       statusCode: res.statusCode,
       duration,
     });
+  });
+  next();
+});
+
+app.use((req, res, next) => {
+  res.setTimeout(10000, () => {
+    logger.error({ event: "request_timeout", traceId: req.traceId });
+    res.status(408).end();
   });
   next();
 });
