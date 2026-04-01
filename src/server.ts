@@ -2,67 +2,45 @@ import app from "@/app";
 import { connectDB, closeDB } from "@/config/db";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/env";
+import { withRetry, isTransientError, RetryAbortedError } from "@/utils/retry";
 
 let server: ReturnType<typeof app.listen> | undefined;
 let isShuttingDown = false;
-
-const withRetry = async <T>(
-  fn: () => Promise<T>,
-  label: string,
-  maxAttempts = 3,
-  baseDelayMs = 1000
-): Promise<T> => {
-  for (let attempt = 1; attempt<= maxAttempts; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      const isLastAttempt = attempt === maxAttempts;
-      if (isLastAttempt) {
-        logger.fatal(
-          { event: `${label}_failed`, attempt, error: err },
-          `${label} failed after ${maxAttempts} attempts`
-        );
-        throw err;
-      }
-
-      const delayMs = baseDelayMs * 2 ** (attempt - 1);
-      logger.warn(
-        { event: `${label}_retry`, attempt, nextRetryMs: delayMs, error:err },
-        `${label} failed on attempt ${attempt}, retrying in ${delayMs}ms...`
-      );
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-  }
-  throw new Error(`${label} failed after ${maxAttempts} attempts`);
-};
+const abortController = new AbortController();
 
 export const startServer = async () => {
 
   const rawPort = env.PORT;
   const PORT = Number(rawPort);
 
-  if(!Number.isFinite(PORT) || !Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) throw new Error("Invalid PORT value");
+  if(!Number.isFinite(PORT) || !Number.isInteger(PORT) || PORT<= 0 || PORT> 65535) {
+    throw new Error("Invalid PORT value");
+  }
 
   const NODE_ENV = env.NODE_ENV;
 
-  await withRetry(() => connectDB(), "db_connected");
+  await withRetry(
+    () => connectDB(),
+    "db_connected",
+    3,
+    1000,
+    isTransientError,
+    0,
+    abortController.signal
+  );
   logger.info({ event: "db_connected" }, "Database connected successfully");
 
-  await withRetry(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        server = app.listen(PORT, () => {
-          logger.info(
-            { event: "server_started", port: PORT, environment: NODE_ENV },
-            `Server is running in ${NODE_ENV} mode on port ${PORT}`
-          );
-          server!.removeListener("error", reject);
-          resolve();
-        });
-        server.once("error", reject);
-      }),
-      "server_listen"
-  );
+  await new Promise<void>((resolve, reject) => {
+    server = app.listen(PORT, () => {
+      logger.info(
+        { event: "server_started", port: PORT, environment: NODE_ENV },
+        `Server running in ${NODE_ENV} mode on port ${PORT}`
+      );
+      server!.removeListener("error", reject);
+      resolve();
+    });
+    server.once("error", reject);
+  });
 
   server!.on("error", (error: NodeJS.ErrnoException) => {
     logger.fatal(
@@ -76,6 +54,8 @@ export const startServer = async () => {
 export const shutdownGracefully = async (exitCode = 0) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
+
+  abortController.abort();
 
   logger.info({ event: "shutdown_initiated" }, "Graceful shutdown initiated");
 
