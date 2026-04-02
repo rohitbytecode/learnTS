@@ -199,7 +199,7 @@ export const withRetry = async <T>(
             attempt,
             totalElapsedMs: Date.now() -start,
             succeeded: true,
-            reason: "unknown", // success has error? :)
+            reason: undefined,
           });
 
           return result;

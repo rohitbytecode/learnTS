@@ -43,7 +43,7 @@ export const startServer = async () => {
       if(metrics.succeeded) {
         logger.info(
           {
-            event: "db_connec_success",
+            event: "db_connect_success",
             attempt: metrics.attempt,
             totalElapsedMs: metrics.totalElapsedMs
           },
