@@ -2,7 +2,13 @@ import app from "@/app";
 import { connectDB, closeDB } from "@/config/db";
 import { logger } from "@/utils/logger";
 import { env } from "@/config/env";
-import { withRetry, isTransientError, RetryAbortedError } from "@/utils/retry";
+import { 
+  withRetry, 
+  isTransientError, 
+  RetryAbortedError, 
+  RetryTimedOutError 
+} 
+from "@/utils/retry";
 
 let server: ReturnType<typeof app.listen> | undefined;
 let isShuttingDown = false;
@@ -35,6 +41,12 @@ export const startServer = async () => {
     logger.info({ event: "db_connect_aborted" }, "DB connection aborted during shutdown");
     return;
   }
+  if (err instanceof RetryTimedOutError) {
+    logger.fatal({ event: "db_connect_timeout", error: err.message },
+      "DB connection exceeded total time budget"
+    );
+    throw err;
+  }
   throw err;
 }
   logger.info({ event: "db_connected" }, "Database connected successfully");
@@ -53,7 +65,7 @@ export const startServer = async () => {
 
   server!.on("error", (error: NodeJS.ErrnoException) => {
     logger.fatal(
-      { event: "server_error", error: error },
+      { event: "server_error", error: error.message },
       "Server encountered an error"
     );
     shutdownGracefully(1);
@@ -79,7 +91,7 @@ export const shutdownGracefully = async (exitCode = 0) => {
         logger.info({ event: "shutdown_complete" }, "Shutdown complete");
         process.exit(exitCode);
       } catch (err) {
-        logger.error({ event: "shutdown_db_error", error: err });
+        logger.error({ event: "shutdown_db_error", error: err instanceof Error ? err.message : err, });
         process.exit(1);
       }
     });
