@@ -1,3 +1,4 @@
+import { on } from "node:cluster";
 import { logger } from "./logger";
 
 export class RetryAbortedError extends Error {
@@ -11,6 +12,7 @@ export type RetryOptions = {
     maxAttempts?: number;
     baseDelayMs?: number;
     jitterMs?: number;
+    maxDelayMs?: number;
     shouldRetry?: (err: unknown) => boolean;
     signal?: AbortSignal;
 };
@@ -32,20 +34,34 @@ export const isTransientError = (err: unknown): boolean => {
 
     return transientMassages.some(
         (msg) => 
-            err.message.includes(msg) ||
-        (err as NodeJS.ErrnoException).code === msg
+        (err as NodeJS.ErrnoException).code === msg ||
+        err.message.includes(msg)
     );
+};
+
+const computeDelay = (
+  attempt: number,
+  baseDelayMs: number,
+  jitterMs: number,
+  maxDelayMs: number
+): number => {
+  const jitter = Math.random() * jitterMs;
+  return Math.min(baseDelayMs * 2 ** (attempt-1) + jitter, maxDelayMs);
 };
 
 export const withRetry = async <T>(
     fn: () => Promise<T>,
     label: string,
-    maxAttempts = 3,
-    baseDelayMs = 1000,
-    shouldRetry = isTransientError,
-    jitterMs = 0,
-    signal?: AbortSignal,
+    options: RetryOptions = {},
 ): Promise<T> => {
+  const {
+    maxAttempts= 3,
+    baseDelayMs= 1000,
+    jitterMs = 0,
+    maxDelayMs = 30_000,
+    shouldRetry = isTransientError,
+    signal,
+  } = options;
     for (let attempt = 1; attempt<= maxAttempts; attempt++) {
 
         if(signal?.aborted) {
@@ -73,23 +89,26 @@ export const withRetry = async <T>(
             throw err;
            }
 
-           const jitter = Math.random() * jitterMs;
-           const delayMs = baseDelayMs * 2 ** (attempt - 1) + jitter;
+           const delayMs = computeDelay(attempt, baseDelayMs, jitterMs, maxDelayMs);
     
           logger.warn(
             { event: `${label}_retry`, attempt, nextRetryMs: Math.round(delayMs), error: err },
             `${label} failed on attempt ${attempt}, retrying in ${Math.round(delayMs)}ms...`
           );
           await new Promise<void>((resolve, reject) => {
-            const timer = setTimeout(resolve, delayMs);
+
+            const onAbort = () => {
+              clearTimeout(timer);
+              reject(new RetryAbortedError(label));
+            };
+
+            const timer = setTimeout(() => {
+              signal?.removeEventListener("abort", onAbort);
+              resolve();
+            }, delayMs);
+
             signal?.addEventListener(
-              "abort",
-              () => {
-                clearTimeout(timer);
-                reject(new RetryAbortedError(label));
-              },
-              { once: true }
-            );
+              "abort", onAbort, { once: true });
           });
         }
       }

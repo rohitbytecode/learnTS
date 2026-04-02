@@ -19,15 +19,24 @@ export const startServer = async () => {
 
   const NODE_ENV = env.NODE_ENV;
 
+  try {
   await withRetry(
     () => connectDB(),
     "db_connected",
-    3,
-    1000,
-    isTransientError,
-    0,
-    abortController.signal
+    {
+    maxAttempts: 3,
+    baseDelayMs: 1000,
+    shouldRetry: isTransientError,
+    signal: abortController.signal,
+  }
   );
+} catch (err) {
+  if (err instanceof RetryAbortedError) {
+    logger.info({ event: "db_connect_aborted" }, "DB connection aborted during shutdown");
+    return;
+  }
+  throw err;
+}
   logger.info({ event: "db_connected" }, "Database connected successfully");
 
   await new Promise<void>((resolve, reject) => {
