@@ -22,6 +22,7 @@ export type RetryReason =
   | "server_error"
   | "rate_limit"
   | "database"
+  | "deadlock"
   | "validation"
   | "unknown";
 
@@ -54,7 +55,7 @@ export type RetryOptions = {
 const TRANSIENT_NETWORK_CODES = new Set([
     "ECONNREFUSED",
     "ECONNRESET",
-    "ETIMEOUT",
+    "ETIMEDOUT",
     "ENOTFOUND",
     "ENETUNREACH",
     "EHOSTUNREACH",
@@ -111,13 +112,16 @@ RetryReason) => {
     if(!(err instanceof Error)) return "unknown";
 
     const msg = err.message.toLowerCase();
+    const code = (err as NodeJS.ErrnoException).code;
 
-    if(msg.includes("connection") || msg.includes("timeout")
-    || msg.includes("socket")) {
+    if(code === "ECONNREFUSED") return "connection_refused";
+    if(code === "ETIMEDOUT") return "timeout";
+
+    if(msg.includes("deadlock")) {
       return "database"
     }
-    if(msg.includes("econnrefused") || msg.includes("etimedout")) {
-      return "database";
+    if(msg.includes("connection") || msg.includes("socket")) {
+      return "transient_network";
     }
     return extractReason(err);
   };
@@ -128,14 +132,14 @@ export const createHttpRetryClassifier = (): ((err: unknown) =>
     return (err: unknown): RetryReason => {
       if (!(err instanceof Error)) return "unknown";
 
-      const status = (err as any).status
-      || (err as any).response?.status;
+      const status = (err as { status?: number }).status ??
+      (err as { response?: { status?: number }}).response?.status;
 
-      if(status) {
-        if([429, 503, 504].includes(status)) return "rate_limit";
-        if([500, 502, 503, 504].includes(status)) return "server_error";
-      }
-
+      if(status!==undefined) {
+      if(status === 429) return "rate_limit"
+      if(status === 408 || status === 504) return "timeout";
+      if(status >= 500) return "server_error";
+    }
     return extractReason(err);
   };
 };
@@ -145,12 +149,10 @@ export const createHttpRetryClassifier = (): ((err: unknown) =>
 const defaultDelayStrategy = (
   attempt: number,
   baseDelayMs: number,
-  jitterMs: number,
   maxDelayMs: number
 ): number => {
-  const exponential = baseDelayMs * Math.pow(2, attempt-1);
-  const jitter = Math.random() * jitterMs;
-  return Math.min(exponential + jitter, maxDelayMs);
+  const maxDelay = Math.min(baseDelayMs * 2 ** (attempt-1), maxDelayMs);
+  return Math.random() * maxDelay;
 };
 
 //main retry function
@@ -175,8 +177,7 @@ export const withRetry = async <T>(
       defaultDelayStrategy(
         attempt,
         baseDelayMs,
-        jitterMs,
-        maxDelayMs
+        maxDelayMs,
       ),
     signal,
     onMetrics,
