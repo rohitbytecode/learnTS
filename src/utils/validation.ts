@@ -7,8 +7,7 @@ import { Request, Response, NextFunction } from "express";
  * @returns Express middleware function
  */
 export const validateRequest =
-  (schema: ZodSchema) =>
-  async (req: Request, res: Response, next: NextFunction) => {
+  (schema: ZodSchema) => async (req: Request, res: Response, next: NextFunction) => {
     try {
       req.body = await schema.parseAsync(req.body);
       next();

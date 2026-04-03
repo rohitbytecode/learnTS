@@ -82,19 +82,19 @@ src/
 
 ## What This Project Covers
 
-* Structuring a TypeScript backend
-* Modular architecture (feature-based)
-* Basics of SaaS backend design
-* Clean code practices
-* API development with Express
+- Structuring a TypeScript backend
+- Modular architecture (feature-based)
+- Basics of SaaS backend design
+- Clean code practices
+- API development with Express
 
 ---
 
 ## Notes
 
-* Code is intentionally kept simple to focus on structure and concepts
-* Features will evolve gradually (auth, multi-tenancy, etc.)
-* Avoid unnecessary abstractions unless required
+- Code is intentionally kept simple to focus on structure and concepts
+- Features will evolve gradually (auth, multi-tenancy, etc.)
+- Avoid unnecessary abstractions unless required
 
 ---
 

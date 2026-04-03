@@ -43,7 +43,7 @@ git push origin feature/your-feature-name
 
 ## Notes
 
-* Do not push directly to `main`
-* Ensure the project runs before creating a PR
-* Keep commit messages meaningful and concise
-* Avoid unrelated changes in a single PR
+- Do not push directly to `main`
+- Ensure the project runs before creating a PR
+- Keep commit messages meaningful and concise
+- Avoid unrelated changes in a single PR

@@ -1,17 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 
 export const tenantMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user || typeof req.user === 'string') {
-        return res.status(401).json({ message: "Unauthorized" })
-    }
+  if (!req.user || typeof req.user === "string") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-    const tenantId = req.user.tenantId
+  const tenantId = req.user.tenantId;
 
-    if(!tenantId) {
-        return res.status(403).json({ message: "Tenant not found" })
-    }
+  if (!tenantId) {
+    return res.status(403).json({ message: "Tenant not found" });
+  }
 
-    req.tenantId = tenantId as string;
+  req.tenantId = tenantId as string;
 
-    next()
-}
+  next();
+};

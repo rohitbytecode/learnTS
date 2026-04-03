@@ -11,7 +11,7 @@ const bootstrap = async () => {
           event: "startup_failed",
           error: error.message,
         },
-        "Application failed to start"
+        "Application failed to start",
       );
     }
     process.exit(1);
@@ -39,6 +39,6 @@ process.on("SIGINT", () => {
 });
 
 bootstrap().catch((err) => {
-  logger.fatal({ event: "bootstrap_error", error:err });
+  logger.fatal({ event: "bootstrap_error", error: err });
   process.exit(1);
 });

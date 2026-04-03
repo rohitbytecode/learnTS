@@ -1,21 +1,26 @@
 # Feature: DELETE /patients/:id
 
 ## Goal in one sentence
+
 Delete one patient record. Only allowed for ADMIN/MANAGER of the same tenant.
 
 ## Actors & Permissions
+
 - Caller must be authenticated
 - Role: ADMIN or MANAGER
 - Must belong to same tenant as the patient
 
 ## Inputs
+
 - Path: id (UUID)
 - Headers: Authorization
 
 ## Success output
+
 - 204 No Content
 
 ## Main happy path (sequential steps, no code)
+
 1. Extract bearer token → validate & decode → get userId, role, tenantId
 2. Parse :id from path → validate UUID format
 3. Start transaction (if soft-delete needs cascade or audit log)
@@ -30,6 +35,7 @@ Delete one patient record. Only allowed for ADMIN/MANAGER of the same tenant.
 9. Return 204
 
 ## Edge cases & unhappy paths (be explicit)
+
 - id not UUID → 400
 - id missing → 400 (or 404 depending on your convention)
 - patient not found → 404
@@ -40,6 +46,7 @@ Delete one patient record. Only allowed for ADMIN/MANAGER of the same tenant.
 - Already deleted (soft-delete) → 404 or 410 Gone?
 
 ## Open questions / trade-offs I need to decide
+
 - Soft vs hard delete? (affects audits, recovery, FK constraints)
 - Do we need reason field / deletedBy?
 - Should we publish domain event "PatientDeleted"?

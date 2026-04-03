@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { loginUser, registerOrgAndAdmin } from "./auth.service";
 import { registerOrganizationSchema, loginSchema } from "@/validations/auth.validation";
-import { logAuth, logError } from "@/utils/logger"
+import { logAuth, logError } from "@/utils/logger";
 import { successResponse } from "@/utils/apiResponse";
 
 import { audit } from "@/utils/audit.helper";
@@ -31,14 +31,13 @@ export const registerOrganization = async (req: Request, res: Response, next: Ne
     const orgName = (req.body as any)?.orgName;
 
     if (error instanceof Error) {
-      const isUniqueError =
-        error.message.includes("Unique constraint");
+      const isUniqueError = error.message.includes("Unique constraint");
 
       audit(req, {
         action: AUDIT_ACTIONS.ORG_CREATE_FAILED,
         metadata: {
           email: email,
-          orgName:orgName,
+          orgName: orgName,
           reason: error instanceof Error ? error.message : "unknown",
         },
       });
@@ -46,24 +45,18 @@ export const registerOrganization = async (req: Request, res: Response, next: Ne
       if (isUniqueError) {
         logError.general(error, "Organization registration - duplicate email");
 
-        return res
-          .status(409)
-          .json({ success: false, message: "Email already exists" });
+        return res.status(409).json({ success: false, message: "Email already exists" });
       }
 
       if (error.name === "ZodError") {
         logError.validation(error, "/auth/register");
 
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid input data" });
+        return res.status(400).json({ success: false, message: "Invalid input data" });
       }
 
       logError.general(error, "Organization registration");
 
-      return res
-        .status(400)
-        .json({ success: false, message: "Registration failed" });
+      return res.status(400).json({ success: false, message: "Registration failed" });
     }
 
     logError.general(error as Error, "Organization registration - unexpected error");
@@ -79,19 +72,17 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     logAuth.loginAttempt(validatedData.email, true, validatedData.tenantId);
 
-      audit(req, {
-        action: AUDIT_ACTIONS.AUTH_LOGIN_SUCCESS,
-        metadata: {
-          email: validatedData.email,
-          tenantId: validatedData.tenantId,
-          ip: req.ip,
-          userAgent: req.headers["user-agent"],
-        },
-      });
+    audit(req, {
+      action: AUDIT_ACTIONS.AUTH_LOGIN_SUCCESS,
+      metadata: {
+        email: validatedData.email,
+        tenantId: validatedData.tenantId,
+        ip: req.ip,
+        userAgent: req.headers["user-agent"],
+      },
+    });
 
-    return res
-      .status(200)
-      .json(successResponse({ user, token }, "Login successful"));
+    return res.status(200).json(successResponse({ user, token }, "Login successful"));
   } catch (error: unknown) {
     const email = (req.body as any)?.email || "unknown";
     const tenantId = (req.body as any)?.tenantId;
@@ -113,16 +104,12 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       if (error.name === "ZodError") {
         logError.validation(error, "/auth/login");
 
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid input data" });
+        return res.status(400).json({ success: false, message: "Invalid input data" });
       }
 
       logError.general(error, "User login");
 
-      return res
-        .status(401)
-        .json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
     logError.general(error as Error, "User login - unexpected error");
