@@ -1,26 +1,25 @@
 services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: saas_db
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
 
- postgres:
-  image: postgres
-  environment:
-   POSTGRES_USER: postgres
-   POSTGRES_DB: saas_db
-   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  ports:
-   - "5432:5432"
-
- api:
-  build:
-    context: .
-    target: development
-  ports:
-   - "5000:5000"
-  depends_on:
-   - postgres
-  env_file:
-    - .env
-  volumes:
-    - ./src:/app/src
-    - ./prisma:/app/prisma
-  environment:
-    - NODE_ENV=development
+  api:
+    build:
+      context: .
+      target: development
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    environment:
+      - NODE_ENV=development

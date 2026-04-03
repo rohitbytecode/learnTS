@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import v1Routes from "@/routes/v1"
+import v1Routes from "@/routes/v1";
 
 import { logger } from "@/utils/logger";
 import { successResponse } from "./utils/apiResponse";
@@ -16,26 +16,26 @@ const app = express();
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
-  })
+  }),
 );
 app.use(
   cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
 
-    const allowed = env.ALLOWED_ORIGINS
-    ?.split(",")
-    .map(o => o.trim())
-    .filter(Boolean) ?? [];
-    
-    if(allowed.includes(origin)) return callback(null, true);
+      const allowed =
+        env.ALLOWED_ORIGINS?.split(",")
+          .map((o) => o.trim())
+          .filter(Boolean) ?? [];
 
-    callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-  })
+      if (allowed.includes(origin)) return callback(null, true);
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  }),
 );
-app.use(express.json({ limit: "100kb"} ));
+app.use(express.json({ limit: "100kb" }));
 
 app.use(traceMiddleware);
 
@@ -52,12 +52,12 @@ app.use((req, _res, next) => {
 });
 
 // response status + duration
-app.use((req, res, next)=> {
+app.use((req, res, next) => {
   const start = Date.now();
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-  
+
     logger.info({
       event: "request_completed",
       traceId: req.traceId,
@@ -94,14 +94,13 @@ app.get("/health", async (_req, res) => {
       service: "saas-backend",
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),
-    })
+    }),
   );
 });
 
-app.get('/', (_req, res) => {
+app.get("/", (_req, res) => {
   logger.info({ event: "root_endpoint" }, "Root endpoint accessed");
-  res.status(200).json
-  (successResponse(null, "Backend is online"));
+  res.status(200).json(successResponse(null, "Backend is online"));
 });
 
 app.use(globalRateLimiter);

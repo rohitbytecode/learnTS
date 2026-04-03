@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { Request, Response, NextFunction } from "express";
 
 export const traceMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const traceId = randomUUID();
+  const traceId = randomUUID();
 
-    req.traceId = traceId;
-    res.setHeader("X-Trace-Id", traceId);
+  req.traceId = traceId;
+  res.setHeader("X-Trace-Id", traceId);
 
-    next();
-}
+  next();
+};

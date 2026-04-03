@@ -1,16 +1,20 @@
 # Feature: [HTTP_METHOD] [PATH]
-(example: POST /patients    or   GET /appointments/:id/records)
+
+(example: POST /patients or GET /appointments/:id/records)
 
 ## Goal in one sentence
+
 One clear sentence what this endpoint is supposed to achieve.
 
 ## Actors & Permissions
+
 - Must be authenticated? (yes/no)
 - Allowed roles: … (ADMIN, MANAGER, DOCTOR, PATIENT, …)
 - Any other restrictions? (same tenant, same organization, owner of resource, rate-limited, …)
 - impersonation / switch-tenant allowed? (yes/no/rarely)
 
 ## Inputs
+
 - Path params: …
 - Query params: … (with whether required or optional)
 - Request body: … (main shape or DTO name)
@@ -18,24 +22,26 @@ One clear sentence what this endpoint is supposed to achieve.
 - Files / multipart? (yes/no)
 
 ## Success output
+
 - Status code: …
 - Response body shape: … (or "204 No Content", "stream", etc.)
 - Important headers returned: …
 
 ## Main happy path (sequential steps – write before any code)
-1. 
-2. 
-3. 
-4. 
-5. 
-…
+
+1.
+2.
+3.
+4.
+5. …
 
 ## Edge cases & unhappy paths (list them explicitly – this section prevents most production surprises)
-- 
-- 
-- 
-- 
-- 
+
+-
+-
+-
+-
+-
 - Authorization related:
 - Validation / format related:
 - Not found cases:
@@ -45,12 +51,14 @@ One clear sentence what this endpoint is supposed to achieve.
 - Soft-delete leakage / visibility cases:
 
 ## Security & tenant isolation checklist
+
 - [ ] Every database query/filter includes tenantId (or equivalent isolation key)
 - [ ] No tenantId = global access possible
 - [ ] Cannot see/modify/delete records from other tenants even with UUID guess
 - [ ] Role/permission check happens after tenant isolation (defense in depth)
 
 ## Open questions / important decisions / trade-offs
+
 - Soft-delete vs hard-delete vs archived status?
 - Do we need audit trail / who-deleted / deletion-reason field?
 - Should this action emit a domain event? (PatientDeleted, AppointmentCancelled, …)
@@ -64,6 +72,7 @@ One clear sentence what this endpoint is supposed to achieve.
 - Any PII / sensitive data being permanently removed → compliance impact?
 
 ## Notes / references
+
 - Related endpoints: …
 - Link to ADR / decision record: …
 - Link to DB schema / entity diagram: …

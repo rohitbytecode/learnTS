@@ -3,7 +3,13 @@ import { asyncHandler } from "@/utils/asyncHandler";
 import { authMiddleware } from "@/middleware/auth.middleware";
 import { tenantMiddleware } from "@/middleware/tenant.middleware";
 import { authorize } from "@/middleware/role.middleware";
-import { getPatientsController, createPatientController, getPatientController, updatePatientController, deletePatientController } from "./patient.controller";
+import {
+  getPatientsController,
+  createPatientController,
+  getPatientController,
+  updatePatientController,
+  deletePatientController,
+} from "./patient.controller";
 
 const router = Router();
 
