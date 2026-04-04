@@ -1,7 +1,7 @@
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
-import { env } from "@/config/env";
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+import { env } from '@/config/env';
 
 const connectionString = env.DATABASE_URL;
 
@@ -19,13 +19,13 @@ export async function connectDB() {
       await prisma.$connect();
       await prisma.$queryRaw`SELECT 1`;
 
-      console.log("PostgreSQL connected successfully");
+      console.log('PostgreSQL connected successfully');
       return;
     } catch (error) {
       console.log(`DB connection failed (attempt ${attempt})`);
 
       if (attempt === MAX_RETRIES) {
-        console.error("All retries failed. Exiting...");
+        console.error('All retries failed. Exiting...');
         process.exit(1);
       }
 

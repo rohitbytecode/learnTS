@@ -1,16 +1,16 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from 'express';
 import {
   getPatients,
   createPatient,
   getPatientById,
   updatePatient,
   deletePatient,
-} from "./patient.service";
-import { createPatientSchema, updatePatientSchema } from "@/validations/patient.validation";
-import { logPatient, logError } from "@/utils/logger";
-import { successResponse } from "@/utils/apiResponse";
-import { audit } from "@/utils/audit.helper";
-import { AUDIT_ACTIONS } from "@/constants/auditActions";
+} from './patient.service';
+import { createPatientSchema, updatePatientSchema } from '@/validations/patient.validation';
+import { logPatient, logError } from '@/utils/logger';
+import { successResponse } from '@/utils/apiResponse';
+import { audit } from '@/utils/audit.helper';
+import { AUDIT_ACTIONS } from '@/constants/auditActions';
 
 export const createPatientController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -29,26 +29,26 @@ export const createPatientController = async (req: Request, res: Response, next:
       },
     });
 
-    res.status(201).json(successResponse(patient, "Patient created successfully"));
+    res.status(201).json(successResponse(patient, 'Patient created successfully'));
   } catch (error: unknown) {
     audit(req, {
       action: AUDIT_ACTIONS.PATIENT_CREATE_FAILED,
       metadata: {
         tenantId: req.tenantId,
         name: (req.body as any)?.name,
-        reason: error instanceof Error ? error.message : "unknown",
+        reason: error instanceof Error ? error.message : 'unknown',
       },
     });
 
     if (error instanceof Error) {
-      if (error.name === "ZodError") {
-        logError.validation(error, "/patients");
+      if (error.name === 'ZodError') {
+        logError.validation(error, '/patients');
         return res.status(400).json({ message: error.message, errors: error });
       }
-      logError.general(error, "Patient creation");
+      logError.general(error, 'Patient creation');
       return res.status(400).json({ message: error.message });
     }
-    logError.general(error as Error, "Patient creation - unexpected error");
+    logError.general(error as Error, 'Patient creation - unexpected error');
     next(error);
   }
 };
@@ -59,9 +59,9 @@ export const getPatientsController = async (req: Request, res: Response, next: N
 
     logPatient.retrieved(patients.length, req.tenantId!);
 
-    res.json(successResponse(patients, "Patient retrieved successfully"));
+    res.json(successResponse(patients, 'Patient retrieved successfully'));
   } catch (error: unknown) {
-    logError.general(error as Error, "Patients retrieval");
+    logError.general(error as Error, 'Patients retrieval');
     next(error);
   }
 };
@@ -72,12 +72,12 @@ export const getPatientController = async (req: Request, res: Response, next: Ne
     const patient = await getPatientById(id as string, req.tenantId!);
 
     if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
+      return res.status(404).json({ message: 'Patient not found' });
     }
 
-    res.json(successResponse(patient, "Patient retrieved successfully"));
+    res.json(successResponse(patient, 'Patient retrieved successfully'));
   } catch (error: unknown) {
-    logError.general(error as Error, "Patient retrieval by ID");
+    logError.general(error as Error, 'Patient retrieval by ID');
     next(error);
   }
 };
@@ -98,26 +98,26 @@ export const updatePatientController = async (req: Request, res: Response, next:
       },
     });
 
-    res.json(successResponse(patient, "Patient updated successfully"));
+    res.json(successResponse(patient, 'Patient updated successfully'));
   } catch (error: unknown) {
     audit(req, {
       action: AUDIT_ACTIONS.PATIENT_UPDATE_FAILED,
       metadata: {
         tenantId: req.tenantId,
         patientId: (req.body as any)?.id,
-        reason: error instanceof Error ? error.message : "unknown",
+        reason: error instanceof Error ? error.message : 'unknown',
       },
     });
 
     if (error instanceof Error) {
-      if (error.name === "ZodError") {
-        logError.validation(error, "/patients/:id");
+      if (error.name === 'ZodError') {
+        logError.validation(error, '/patients/:id');
         return res.status(400).json({ message: error.message, errors: error });
       }
-      logError.general(error, "Patient update");
+      logError.general(error, 'Patient update');
       return res.status(400).json({ message: error.message });
     }
-    logError.general(error as Error, "Patient update - unexpected error");
+    logError.general(error as Error, 'Patient update - unexpected error');
     next(error);
   }
 };
@@ -142,11 +142,11 @@ export const deletePatientController = async (req: Request, res: Response, next:
       metadata: {
         tenantId: req.tenantId,
         patientId: (req.body as any)?.id,
-        reason: error instanceof Error ? error.message : "unknown",
+        reason: error instanceof Error ? error.message : 'unknown',
       },
     });
 
-    logError.general(error as Error, "Patient deletion");
+    logError.general(error as Error, 'Patient deletion');
     next(error);
   }
 };

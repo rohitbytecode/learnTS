@@ -1,32 +1,32 @@
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import prettierPlugin from "eslint-plugin-prettier";
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettierPlugin from 'eslint-plugin-prettier';
 
 export default [
   {
-    ignores: ["dist/***", "node_modules/***", "prisma/**", "prisma.config.ts"],
+    ignores: ['dist/***', 'node_modules/***', 'prisma/**', 'prisma.config.ts'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
 
   {
-    files: ["**/*.ts"],
-    
+    files: ['**/*.ts'],
+
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.json",
+        project: './tsconfig.json',
       },
     },
     plugins: {
       prettier: prettierPlugin,
     },
     rules: {
-      "prettier/prettier": "error",
+      'prettier/prettier': 'error',
 
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
 
-      "no-console": "warn",
+      'no-console': 'warn',
     },
   },
 ];

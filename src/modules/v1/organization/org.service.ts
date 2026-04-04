@@ -1,5 +1,5 @@
-import { prisma } from "@/config/db";
-import { hashPassword } from "@/utils/hash";
+import { prisma } from '@/config/db';
+import { hashPassword } from '@/utils/hash';
 
 interface RegisterOrgData {
   orgName: string;
@@ -22,7 +22,7 @@ export const registerOrganization = async (data: RegisterOrgData) => {
       name: data.name,
       email: data.email,
       password: hashedPwd,
-      role: "ADMIN",
+      role: 'ADMIN',
       tenantId: org.id,
     },
   });

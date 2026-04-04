@@ -1,14 +1,14 @@
-import { prisma } from "@/config/db";
-import { hashPassword } from "@/utils/hash";
+import { prisma } from '@/config/db';
+import { hashPassword } from '@/utils/hash';
 
 interface CreateUserData {
   name: string;
   email: string;
-  role: "ADMIN" | "MANAGER" | "USER";
+  role: 'ADMIN' | 'MANAGER' | 'USER';
 }
 
 export const createUser = async (data: CreateUserData, tenantId: string) => {
-  const randomPassword = Math.random().toString(36).slice(-8) + "123!";
+  const randomPassword = Math.random().toString(36).slice(-8) + '123!';
   const hashedPassword = await hashPassword(randomPassword);
 
   const user = await prisma.user.create({

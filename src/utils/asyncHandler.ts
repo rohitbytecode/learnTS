@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { RequestHandler } from 'express';
 
 export const asyncHandler =
   (fn: RequestHandler): RequestHandler =>

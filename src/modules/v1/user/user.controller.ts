@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from "express";
-import { createUser, getUsers, getUserById, updateUser, deleteUser } from "./user.service";
-import { createUserSchema } from "@/validations/user.validation";
-import { logUser, logError } from "@/utils/logger";
-import { successResponse } from "@/utils/apiResponse";
-import { audit } from "@/utils/audit.helper";
-import { AUDIT_ACTIONS } from "@/constants/auditActions";
-import { readSync } from "node:fs";
+import { Request, Response, NextFunction } from 'express';
+import { createUser, getUsers, getUserById, updateUser, deleteUser } from './user.service';
+import { createUserSchema } from '@/validations/user.validation';
+import { logUser, logError } from '@/utils/logger';
+import { successResponse } from '@/utils/apiResponse';
+import { audit } from '@/utils/audit.helper';
+import { AUDIT_ACTIONS } from '@/constants/auditActions';
+import { readSync } from 'node:fs';
 
 export const createUserController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -27,32 +27,32 @@ export const createUserController = async (req: Request, res: Response, next: Ne
 
     return res
       .status(201)
-      .json(successResponse({ user, generatedPassword }, "User created successfully"));
+      .json(successResponse({ user, generatedPassword }, 'User created successfully'));
   } catch (error: unknown) {
     audit(req, {
       action: AUDIT_ACTIONS.USER_CREATE_FAILED,
       metadata: {
         tenantId: req.tenantId,
         email: (req.body as any)?.email,
-        reason: error instanceof Error ? error.message : "unknown",
+        reason: error instanceof Error ? error.message : 'unknown',
       },
     });
 
     if (error instanceof Error) {
-      if (error.name === "ZodError") {
-        logError.validation(error, "/users");
+      if (error.name === 'ZodError') {
+        logError.validation(error, '/users');
         return res.status(400).json({ message: error.message, errors: error });
       }
 
-      const isUniqueError = error.message.includes("Unique constraint");
+      const isUniqueError = error.message.includes('Unique constraint');
       if (isUniqueError) {
-        logError.general(error, "User creation - unique constraint violation");
-        return res.status(409).json({ message: "Email already exists in this tenant" });
+        logError.general(error, 'User creation - unique constraint violation');
+        return res.status(409).json({ message: 'Email already exists in this tenant' });
       }
-      logError.general(error, "User creation");
+      logError.general(error, 'User creation');
       return res.status(400).json({ message: error.message });
     }
-    logError.general(error as Error, "User creation - unexpected error");
+    logError.general(error as Error, 'User creation - unexpected error');
     next(error);
   }
 };
@@ -63,9 +63,9 @@ export const getUsersController = async (req: Request, res: Response, next: Next
 
     logUser.retrieved(users.length, req.tenantId!);
 
-    return res.status(200).json(successResponse(users, "Users retrieved successfully"));
+    return res.status(200).json(successResponse(users, 'Users retrieved successfully'));
   } catch (error: unknown) {
-    logError.general(error as Error, "Users retrieval");
+    logError.general(error as Error, 'Users retrieval');
     next(error);
   }
 };
@@ -76,12 +76,12 @@ export const getUserController = async (req: Request, res: Response, next: NextF
     const user = await getUserById(id as string, req.tenantId!);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    return res.json(successResponse(user, "User retrieved successfully"));
+    return res.json(successResponse(user, 'User retrieved successfully'));
   } catch (error: unknown) {
-    logError.general(error as Error, "User retrieval by ID");
+    logError.general(error as Error, 'User retrieval by ID');
     next(error);
   }
 };
@@ -102,25 +102,25 @@ export const updateUserController = async (req: Request, res: Response, next: Ne
       },
     });
 
-    return res.json(successResponse(user, "User updated successfuly"));
+    return res.json(successResponse(user, 'User updated successfuly'));
   } catch (error: unknown) {
     audit(req, {
       action: AUDIT_ACTIONS.USER_UPDATE_FAILED,
       metadata: {
         tenantId: req.tenantId,
         userId: (req.body as any)?.id,
-        reason: error instanceof Error ? error.message : "unknown",
+        reason: error instanceof Error ? error.message : 'unknown',
       },
     });
     if (error instanceof Error) {
-      if (error.name === "ZodError") {
-        logError.validation(error, "/users/:id");
+      if (error.name === 'ZodError') {
+        logError.validation(error, '/users/:id');
         return res.status(400).json({ message: error.message, errors: error });
       }
-      logError.general(error, "User update");
+      logError.general(error, 'User update');
       return res.status(400).json({ message: error.message });
     }
-    logError.general(error as Error, "User update - unexpected error");
+    logError.general(error as Error, 'User update - unexpected error');
     next(error);
   }
 };
@@ -145,11 +145,11 @@ export const deleteUserController = async (req: Request, res: Response, next: Ne
       metadata: {
         tenantId: req.tenantId,
         userId: (req.body as any)?.id,
-        reason: error instanceof Error ? error.message : "unknown",
+        reason: error instanceof Error ? error.message : 'unknown',
       },
     });
 
-    logError.general(error as Error, "User deletion");
+    logError.general(error as Error, 'User deletion');
     next(error);
   }
 };
