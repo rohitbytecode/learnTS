@@ -1,5 +1,5 @@
-import { insertAuditLog } from "@/repositories/audit.repository";
-import { logger } from "@/utils/logger";
+import { insertAuditLog } from '@/repositories/audit.repository';
+import { logger } from '@/utils/logger';
 
 interface AuditLog {
   action: string;
@@ -14,11 +14,11 @@ export const logAuditEvent = async (data: AuditLog) => {
   } catch (error) {
     logger.error(
       {
-        event: "audit_db_failed",
+        event: 'audit_db_failed',
         error,
         fallback: data,
       },
-      "Audit DB insert failed",
+      'Audit DB insert failed',
     );
   }
 };

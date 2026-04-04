@@ -1,5 +1,5 @@
-import { startServer, shutdownGracefully } from "@/server";
-import { logger } from "@/utils/logger";
+import { startServer, shutdownGracefully } from '@/server';
+import { logger } from '@/utils/logger';
 
 const bootstrap = async () => {
   try {
@@ -8,37 +8,37 @@ const bootstrap = async () => {
     if (error instanceof Error) {
       logger.fatal(
         {
-          event: "startup_failed",
+          event: 'startup_failed',
           error: error.message,
         },
-        "Application failed to start",
+        'Application failed to start',
       );
     }
     process.exit(1);
   }
 };
 
-process.on("unhandledRejection", (err, promise) => {
-  logger.fatal({ event: "unhandled_rejection", error: err, promise: String(promise) });
+process.on('unhandledRejection', (err, promise) => {
+  logger.fatal({ event: 'unhandled_rejection', error: err, promise: String(promise) });
   shutdownGracefully(1);
 });
 
-process.on("uncaughtException", (err) => {
-  logger.fatal({ event: "uncaught_exception", error: err });
+process.on('uncaughtException', (err) => {
+  logger.fatal({ event: 'uncaught_exception', error: err });
   shutdownGracefully(1);
 });
 
-process.on("SIGTERM", () => {
-  logger.info({ event: "SIGTERM" });
+process.on('SIGTERM', () => {
+  logger.info({ event: 'SIGTERM' });
   shutdownGracefully();
 });
 
-process.on("SIGINT", () => {
-  logger.info({ event: "SIGINT" });
+process.on('SIGINT', () => {
+  logger.info({ event: 'SIGINT' });
   shutdownGracefully();
 });
 
 bootstrap().catch((err) => {
-  logger.fatal({ event: "bootstrap_error", error: err });
+  logger.fatal({ event: 'bootstrap_error', error: err });
   process.exit(1);
 });

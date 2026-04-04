@@ -1,7 +1,7 @@
-import pino from "pino";
+import pino from 'pino';
 
 export const logger = pino({
-  level: process.env.LOG_LEVEL || "info",
+  level: process.env.LOG_LEVEL || 'info',
   formatters: {
     level: (label) => {
       return { level: label };
@@ -22,20 +22,20 @@ export const logAuth = {
   loginAttempt: (email: string, success: boolean, tenantId?: string) => {
     logger.info(
       {
-        event: "login_attempt",
+        event: 'login_attempt',
         email,
         success,
         tenantId,
         timestamp: new Date().toISOString(),
       },
-      `Login attempt: ${success ? "SUCCESS" : "FAILED"} for ${email}`,
+      `Login attempt: ${success ? 'SUCCESS' : 'FAILED'} for ${email}`,
     );
   },
 
   registration: (email: string, orgName: string) => {
     logger.info(
       {
-        event: "user_registration",
+        event: 'user_registration',
         email,
         orgName,
         timestamp: new Date().toISOString(),
@@ -49,7 +49,7 @@ export const logUser = {
   created: (email: string, role: string, tenantId: string) => {
     logger.info(
       {
-        event: "user_created",
+        event: 'user_created',
         email,
         role,
         tenantId,
@@ -62,7 +62,7 @@ export const logUser = {
   retrieved: (count: number, tenantId: string) => {
     logger.info(
       {
-        event: "users_retrieved",
+        event: 'users_retrieved',
         count,
         tenantId,
         timestamp: new Date().toISOString(),
@@ -76,7 +76,7 @@ export const logPatient = {
   created: (name: string, tenantId: string) => {
     logger.info(
       {
-        event: "patient_created",
+        event: 'patient_created',
         name,
         tenantId,
         timestamp: new Date().toISOString(),
@@ -88,7 +88,7 @@ export const logPatient = {
   retrieved: (count: number, tenantId: string) => {
     logger.info(
       {
-        event: "patients_retrieved",
+        event: 'patients_retrieved',
         count,
         tenantId,
         timestamp: new Date().toISOString(),
@@ -102,7 +102,7 @@ export const logError = {
   general: (error: Error, context?: string) => {
     logger.error(
       {
-        event: "error",
+        event: 'error',
         error: {
           message: error.message,
           stack: error.stack,
@@ -118,7 +118,7 @@ export const logError = {
   validation: (errors: any, endpoint: string) => {
     logger.warn(
       {
-        event: "validation_error",
+        event: 'validation_error',
         errors,
         endpoint,
         timestamp: new Date().toISOString(),
@@ -130,7 +130,7 @@ export const logError = {
   database: (error: Error, operation: string) => {
     logger.error(
       {
-        event: "database_error",
+        event: 'database_error',
         error: {
           message: error.message,
           stack: error.stack,

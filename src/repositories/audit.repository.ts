@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import { pool } from "@/config/db";
+import { randomUUID } from 'node:crypto';
+import { pool } from '@/config/db';
 
 interface AuditLog {
   action: string;

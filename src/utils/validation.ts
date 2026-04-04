@@ -1,5 +1,5 @@
-import { ZodSchema, ZodError } from "zod";
-import { Request, Response, NextFunction } from "express";
+import { ZodSchema, ZodError } from 'zod';
+import { Request, Response, NextFunction } from 'express';
 
 /**
  * Validates request body against a Zod schema
@@ -14,15 +14,15 @@ export const validateRequest =
     } catch (error) {
       if (error instanceof ZodError) {
         const formattedErrors = error.issues.map((err) => ({
-          field: err.path.join("."),
+          field: err.path.join('.'),
           message: err.message,
         }));
         return res.status(400).json({
-          message: "Validation failed",
+          message: 'Validation failed',
           errors: formattedErrors,
         });
       }
-      return res.status(400).json({ message: "Validation error" });
+      return res.status(400).json({ message: 'Validation error' });
     }
   };
 
@@ -33,13 +33,13 @@ export const validateRequest =
  */
 export const formatZodError = (error: ZodError) => {
   const formattedErrors = error.issues.map((err) => ({
-    field: err.path.join("."),
+    field: err.path.join('.'),
     message: err.message,
     code: err.code,
   }));
 
   return {
-    message: "Validation failed",
+    message: 'Validation failed',
     errors: formattedErrors,
   };
 };

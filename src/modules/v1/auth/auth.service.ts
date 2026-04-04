@@ -1,7 +1,7 @@
-import { prisma } from "@/config/db";
-import { comparePassword } from "@/utils/hash";
-import { generateToken } from "@/utils/jwt";
-import { registerOrganization } from "@/modules/v1/organization/org.service";
+import { prisma } from '@/config/db';
+import { comparePassword } from '@/utils/hash';
+import { generateToken } from '@/utils/jwt';
+import { registerOrganization } from '@/modules/v1/organization/org.service';
 
 interface RegisterOrgData {
   orgName: string;
@@ -34,12 +34,12 @@ export const loginUser = async (data: LoginData) => {
   });
 
   if (!user) {
-    throw new Error("Invalid credentials");
+    throw new Error('Invalid credentials');
   }
 
   const isPasswordValid = await comparePassword(data.password, user.password);
   if (!isPasswordValid) {
-    throw new Error("Invalid credentials");
+    throw new Error('Invalid credentials');
   }
 
   const token = generateToken({

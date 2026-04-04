@@ -1,5 +1,5 @@
-import { Request } from "express";
-import { logAuditEvent } from "@/services/audit.service";
+import { Request } from 'express';
+import { logAuditEvent } from '@/services/audit.service';
 
 interface AuditOptions {
   action: string;
@@ -14,7 +14,7 @@ export const audit = (req: Request, { action, metadata }: AuditOptions) => {
       userId: (req as any).user?.id,
       metadata: {
         ip: req.ip,
-        userAgent: req.headers["user-agent"],
+        userAgent: req.headers['user-agent'],
         ...metadata,
       },
     });

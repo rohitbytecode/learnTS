@@ -1,30 +1,30 @@
-import { logger } from "./logger";
+import { logger } from './logger';
 
 export class RetryAbortedError extends Error {
   constructor(label: string) {
     super(`${label} retry aborted: shutdown in progress`);
-    this.name = "RetryAbortedError";
+    this.name = 'RetryAbortedError';
   }
 }
 
 export class RetryTimedOutError extends Error {
   constructor(label: string, maxTotalMs: number) {
     super(`${label} retry timed out after ${maxTotalMs}ms`);
-    this.name = "RetryTimedOutError";
+    this.name = 'RetryTimedOutError';
   }
 }
 
 export type RetryReason =
-  | "transient_network"
-  | "timeout"
-  | "dns"
-  | "connection_refused"
-  | "server_error"
-  | "rate_limit"
-  | "database"
-  | "deadlock"
-  | "validation"
-  | "unknown";
+  | 'transient_network'
+  | 'timeout'
+  | 'dns'
+  | 'connection_refused'
+  | 'server_error'
+  | 'rate_limit'
+  | 'database'
+  | 'deadlock'
+  | 'validation'
+  | 'unknown';
 
 export type RetryMetrics = {
   label: string;
@@ -53,19 +53,19 @@ export type RetryOptions = {
 
 //default classifiers
 const TRANSIENT_NETWORK_CODES = new Set([
-  "ECONNREFUSED",
-  "ECONNRESET",
-  "ETIMEDOUT",
-  "ENOTFOUND",
-  "ENETUNREACH",
-  "EHOSTUNREACH",
-  "EAI_AGAIN",
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'ENOTFOUND',
+  'ENETUNREACH',
+  'EHOSTUNREACH',
+  'EAI_AGAIN',
 ]);
 
-const TRANSIENT_MESSAGE_FRAGMENTS = ["socket hang up", "network timeout", "request timeout"];
+const TRANSIENT_MESSAGE_FRAGMENTS = ['socket hang up', 'network timeout', 'request timeout'];
 
 const extractReason = (err: unknown): RetryReason => {
-  if (!(err instanceof Error)) return "unknown";
+  if (!(err instanceof Error)) return 'unknown';
 
   const code = (err as NodeJS.ErrnoException).code;
   const message = err.message.toLowerCase();
@@ -73,34 +73,34 @@ const extractReason = (err: unknown): RetryReason => {
 
   if (code !== undefined) {
     if (TRANSIENT_NETWORK_CODES.has(code)) {
-      if (code === "ECONNREFUSED") return "connection_refused";
-      if (code === "ETIMEDOUT") return "timeout";
-      if (code === "ENOTFOUND" || code === "EAI_AGAIN") return "dns";
+      if (code === 'ECONNREFUSED') return 'connection_refused';
+      if (code === 'ETIMEDOUT') return 'timeout';
+      if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return 'dns';
 
-      return "transient_network";
+      return 'transient_network';
     }
   }
 
   if (TRANSIENT_MESSAGE_FRAGMENTS.some((f) => message.includes(f))) {
-    return "transient_network";
+    return 'transient_network';
   }
 
-  if (message.includes("timeout")) return "timeout";
-  if (message.includes("rate limit") || message.includes("429")) return "rate_limit";
+  if (message.includes('timeout')) return 'timeout';
+  if (message.includes('rate limit') || message.includes('429')) return 'rate_limit';
   if (
-    message.includes("500") ||
-    message.includes("502") ||
-    message.includes("503") ||
-    message.includes("504")
+    message.includes('500') ||
+    message.includes('502') ||
+    message.includes('503') ||
+    message.includes('504')
   ) {
-    return "server_error";
+    return 'server_error';
   }
-  return "unknown";
+  return 'unknown';
 };
 
 export const isTransientError = (err: unknown): boolean => {
   const reason = extractReason(err);
-  return ["transient_network", "timeout", "dns", "connection_refused", "server_error"].includes(
+  return ['transient_network', 'timeout', 'dns', 'connection_refused', 'server_error'].includes(
     reason,
   );
 };
@@ -109,19 +109,19 @@ export const isTransientError = (err: unknown): boolean => {
 
 export const createDbRetryClassifier = (): ((err: unknown) => RetryReason) => {
   return (err: unknown): RetryReason => {
-    if (!(err instanceof Error)) return "unknown";
+    if (!(err instanceof Error)) return 'unknown';
 
     const msg = err.message.toLowerCase();
     const code = (err as NodeJS.ErrnoException).code;
 
-    if (code === "ECONNREFUSED") return "connection_refused";
-    if (code === "ETIMEDOUT") return "timeout";
+    if (code === 'ECONNREFUSED') return 'connection_refused';
+    if (code === 'ETIMEDOUT') return 'timeout';
 
-    if (msg.includes("deadlock")) {
-      return "database";
+    if (msg.includes('deadlock')) {
+      return 'database';
     }
-    if (msg.includes("connection") || msg.includes("socket")) {
-      return "transient_network";
+    if (msg.includes('connection') || msg.includes('socket')) {
+      return 'transient_network';
     }
     return extractReason(err);
   };
@@ -129,16 +129,16 @@ export const createDbRetryClassifier = (): ((err: unknown) => RetryReason) => {
 
 export const createHttpRetryClassifier = (): ((err: unknown) => RetryReason) => {
   return (err: unknown): RetryReason => {
-    if (!(err instanceof Error)) return "unknown";
+    if (!(err instanceof Error)) return 'unknown';
 
     const status =
       (err as { status?: number }).status ??
       (err as { response?: { status?: number } }).response?.status;
 
     if (status !== undefined) {
-      if (status === 429) return "rate_limit";
-      if (status === 408 || status === 504) return "timeout";
-      if (status >= 500) return "server_error";
+      if (status === 429) return 'rate_limit';
+      if (status === 408 || status === 504) return 'timeout';
+      if (status >= 500) return 'server_error';
     }
     return extractReason(err);
   };
@@ -280,7 +280,7 @@ export const withRetry = async <T>(
 
       await new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => {
-          signal?.removeEventListener("abort", onAbort);
+          signal?.removeEventListener('abort', onAbort);
           resolve();
         }, delayMs);
 
@@ -289,7 +289,7 @@ export const withRetry = async <T>(
           reject(new RetryAbortedError(label));
         };
 
-        signal?.addEventListener("abort", onAbort, { once: true });
+        signal?.addEventListener('abort', onAbort, { once: true });
       });
     }
   }
