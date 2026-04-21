@@ -115,4 +115,45 @@ type QueuedTask<T> = {
 export class Bulkhead extends EventEmitter {
   private active = 0;
   private queuedCount = 0;
+  private rejected = 0;
+  private completed = 0;
+  private totalWaitTimeMs = 0;
+
+  private currentMaxConCurrent: number;
+  private readonly maxConcurrent: number;
+  private readonly maxQueueSize: number;
+  private readonly maxWaitMs: number;
+
+  private readonly enablePriority: boolean;
+  private readonly agingEnabled: boolean;
+  private readonly agingIntervals: number;
+  private readonly agingBoost: number;
+
+  // EMA+ cold start ptotection
+  private readonly adaptiveEnabled: boolean;
+  private readonly adaptiveMin: number;
+  private readonly adjustmentIntervalMs: number;
+  private readonly errorThreshold: number;
+  private readonly latencyThresholdMs: number;
+  private readonly stepSize: number;
+  private readonly emaAlpha: number;
+
+  private emaErrorRate = 0;
+  private emaLatency = 0;
+  private recentSuccess = 0;
+  private recentFailure = 0;
+  private recentTotalLatency = 0;
+  private samplesCollected = 0;
+  private adjustmentTimer?: NodeJS.Timeout;
+
+  private readonly queue: QueuedTask<any>[] = [];
+  private readonly priorityQueue?: PriorityQueue<QueuedTask<any>>;
+
+  readonly name: string;
+
+  constructor(config: BulkheadConfig) {
+    super();
+    this.name = config.name;
+    this.maxConcurrent = config.maxConcurrent;
+  }
 }
