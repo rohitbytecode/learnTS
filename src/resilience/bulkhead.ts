@@ -119,7 +119,7 @@ export class Bulkhead extends EventEmitter {
   private completed = 0;
   private totalWaitTimeMs = 0;
 
-  private currentMaxConCurrent: number;
+  private currentMaxConcurrent: number;
   private readonly maxConcurrent: number;
   private readonly maxQueueSize: number;
   private readonly maxWaitMs: number;
@@ -155,5 +155,27 @@ export class Bulkhead extends EventEmitter {
     super();
     this.name = config.name;
     this.maxConcurrent = config.maxConcurrent;
+    this.currentMaxConcurrent = config.maxConcurrent;
+    this.maxQueueSize = config.maxQueueSize ?? 0;
+    this.maxWaitMs = config.maxWaitMs ?? 0;
+
+    this.enablePriority = config.enablePriority ?? false;
+    this.agingEnabled = !!config.aging?.enabled;
+    this.agingIntervals = config.aging?.intervalMs ?? 3000;
+    this.agingBoost = config.aging?.boostAmount ?? 1;
+
+    this.adaptiveEnabled = config.adaptive?.enabled ?? false;
+    this.adaptiveMin =
+      config.adaptive?.minConcurrent ?? Math.max(1, Math.floor(this.maxConcurrent * 0.3));
+
+    this.adjustmentIntervalMs = config.adaptive?.adjustmentIntervalMs ?? 10000;
+    this.errorThreshold = config.adaptive?.scaleDownOnErrorRate ?? 0.15;
+    this.latencyThresholdMs = config.adaptive?.scaleDownOnHighLatencyMs ?? 1500;
+    this.stepSize = config.adaptive?.stepSize ?? 2;
+    this.emaAlpha = config.adaptive?.emaAlpha ?? 0.25;
+
+    if (this.enablePriority) {
+      this.priorityQueue = new PriorityQueue<QueuedTask<any>>();
+    }
   }
 }
