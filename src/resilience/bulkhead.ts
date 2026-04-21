@@ -115,4 +115,67 @@ type QueuedTask<T> = {
 export class Bulkhead extends EventEmitter {
   private active = 0;
   private queuedCount = 0;
+  private rejected = 0;
+  private completed = 0;
+  private totalWaitTimeMs = 0;
+
+  private currentMaxConcurrent: number;
+  private readonly maxConcurrent: number;
+  private readonly maxQueueSize: number;
+  private readonly maxWaitMs: number;
+
+  private readonly enablePriority: boolean;
+  private readonly agingEnabled: boolean;
+  private readonly agingIntervals: number;
+  private readonly agingBoost: number;
+
+  // EMA+ cold start ptotection
+  private readonly adaptiveEnabled: boolean;
+  private readonly adaptiveMin: number;
+  private readonly adjustmentIntervalMs: number;
+  private readonly errorThreshold: number;
+  private readonly latencyThresholdMs: number;
+  private readonly stepSize: number;
+  private readonly emaAlpha: number;
+
+  private emaErrorRate = 0;
+  private emaLatency = 0;
+  private recentSuccess = 0;
+  private recentFailure = 0;
+  private recentTotalLatency = 0;
+  private samplesCollected = 0;
+  private adjustmentTimer?: NodeJS.Timeout;
+
+  private readonly queue: QueuedTask<any>[] = [];
+  private readonly priorityQueue?: PriorityQueue<QueuedTask<any>>;
+
+  readonly name: string;
+
+  constructor(config: BulkheadConfig) {
+    super();
+    this.name = config.name;
+    this.maxConcurrent = config.maxConcurrent;
+    this.currentMaxConcurrent = config.maxConcurrent;
+    this.maxQueueSize = config.maxQueueSize ?? 0;
+    this.maxWaitMs = config.maxWaitMs ?? 0;
+
+    this.enablePriority = config.enablePriority ?? false;
+    this.agingEnabled = !!config.aging?.enabled;
+    this.agingIntervals = config.aging?.intervalMs ?? 3000;
+    this.agingBoost = config.aging?.boostAmount ?? 1;
+
+    this.adaptiveEnabled = config.adaptive?.enabled ?? false;
+    this.adaptiveMin =
+      config.adaptive?.minConcurrent ?? Math.max(1, Math.floor(this.maxConcurrent * 0.3));
+
+    this.adjustmentIntervalMs = config.adaptive?.adjustmentIntervalMs ?? 10000;
+    this.errorThreshold = config.adaptive?.scaleDownOnErrorRate ?? 0.15;
+    this.latencyThresholdMs = config.adaptive?.scaleDownOnHighLatencyMs ?? 1500;
+    this.stepSize = config.adaptive?.stepSize ?? 2;
+    this.emaAlpha = config.adaptive?.emaAlpha ?? 0.25;
+
+    if (this.enablePriority) {
+      this.priorityQueue = new PriorityQueue<QueuedTask<any>>();
+    }
+  }
 }
