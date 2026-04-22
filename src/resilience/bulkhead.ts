@@ -1,3 +1,5 @@
+import { rejects } from 'node:assert/strict';
+import { resolve } from 'node:dns';
 import { EventEmitter } from 'node:events';
 
 export class BulkheadFullError extends Error {
@@ -216,5 +218,8 @@ export class Bulkhead extends EventEmitter {
       this.active--;
       this.processNext();
     }
+  }
+  private enqueue<T>(fn: () => Promise<T>, basePriority: number): Promise<T> {
+    return new Promise((resolve, reject) => {});
   }
 }
