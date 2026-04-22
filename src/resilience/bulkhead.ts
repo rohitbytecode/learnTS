@@ -1,3 +1,5 @@
+import { rejects } from 'node:assert/strict';
+import { resolve } from 'node:dns';
 import { EventEmitter } from 'node:events';
 
 export class BulkheadFullError extends Error {
@@ -177,5 +179,47 @@ export class Bulkhead extends EventEmitter {
     if (this.enablePriority) {
       this.priorityQueue = new PriorityQueue<QueuedTask<any>>();
     }
+
+    if (this.adaptiveEnabled) {
+      this.currentMaxConcurrent = this.adaptiveMin;
+      this.startAdaptive();
+    }
+  }
+
+  async execute<T>(fn: () => Promise<T>, priority = 5): Promise<T> {
+    const basePriority = Math.max(1, Math.min(10, priority));
+
+    if (this.active < this.currentMaxConcurrent) {
+      return this.run(fn);
+    }
+
+    if (this.maxQueueSize === 0 || this.queuedCount >= this.maxQueueSize) {
+      this.rejected++;
+      this.emit('rejected', { reason: 'queue_full' });
+      throw new BulkheadFullError(this.name, this.currentMaxConcurrent, 'queue_full');
+    }
+    return this.enqueue(fn, basePriority);
+  }
+
+  private async run<T>(fn: () => Promise<T>): Promise<T> {
+    this.active++;
+    const start = Date.now();
+
+    try {
+      const result = await fn();
+      this.completed++;
+      this.recordSuccess(Date.now() - start);
+      return result;
+    } catch (err) {
+      this.rejected++;
+      this.recordFailure();
+      throw err;
+    } finally {
+      this.active--;
+      this.processNext();
+    }
+  }
+  private enqueue<T>(fn: () => Promise<T>, basePriority: number): Promise<T> {
+    return new Promise((resolve, reject) => {});
   }
 }
