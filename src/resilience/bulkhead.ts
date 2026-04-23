@@ -1,12 +1,15 @@
-import { rejects } from 'node:assert/strict';
-import { resolve } from 'node:dns';
 import { EventEmitter } from 'node:events';
+import { clearInterval } from 'node:timers';
 
 export class BulkheadFullError extends Error {
   constructor(
     public readonly name: string,
     public readonly maxConcurrent: number,
-    public readonly reason: 'max_concurrent' | 'queue_full' | 'dropped_for_higher_priority',
+    public readonly reason:
+      | 'max_concurrent'
+      | 'queue_full'
+      | 'dropped_for_higher_priority'
+      | 'queue_timeout',
   ) {
     super(`Bulkhead [${name}] rejected (${reason})`);
     this.name = 'BulkheadFullError';
@@ -64,6 +67,7 @@ class PriorityQueue<T extends { getEffectivePriority(now: number): number }> {
     if (this.heap.length === 1) return this.heap.pop();
     const top = this.heap[0];
     this.heap[0] = this.heap.pop()!;
+    this.bubbleDown(0);
     return top;
   }
 
@@ -182,7 +186,7 @@ export class Bulkhead extends EventEmitter {
 
     if (this.adaptiveEnabled) {
       this.currentMaxConcurrent = this.adaptiveMin;
-      this.startAdaptive();
+      this.startAdaptiveTuning();
     }
   }
 
@@ -220,6 +224,171 @@ export class Bulkhead extends EventEmitter {
     }
   }
   private enqueue<T>(fn: () => Promise<T>, basePriority: number): Promise<T> {
-    return new Promise((resolve, reject) => {});
+    return new Promise((resolve, reject) => {
+      const task: QueuedTask<T> = {
+        fn,
+        resolve,
+        reject,
+        queuedAt: Date.now(),
+        basePriority,
+        getEffectivePriority: (now: number) => {
+          if (!this.agingEnabled) return basePriority;
+          const waited = now - task.queuedAt;
+          const agingSteps = Math.floor(waited / this.agingIntervals);
+          return Math.min(10, basePriority + agingSteps * this.agingBoost);
+        },
+      };
+
+      if (this.maxWaitMs > 0) {
+        task.timeoutId = setTimeout(() => this.handleTimeout(task), this.maxWaitMs);
+      }
+
+      if (this.priorityQueue) {
+        this.priorityQueue.enqueue(task);
+      } else {
+        this.queue.push(task);
+      }
+
+      this.queuedCount++;
+      this.processNext();
+    });
+  }
+
+  private handleTimeout(task: QueuedTask<any>): void {
+    const idx = this.queue.indexOf(task);
+    if (idx !== -1) this.queue.splice(idx, 1);
+    this.queuedCount--;
+    this.rejected++;
+    task.reject(new BulkheadFullError(this.name, this.currentMaxConcurrent, 'queue_timeout'));
+  }
+
+  private processNext(): void {
+    if (this.active >= this.currentMaxConcurrent) return;
+
+    let task: QueuedTask<any> | undefined;
+    if (this.priorityQueue) {
+      task = this.priorityQueue.dequeue();
+    } else if (this.queue.length > 0) {
+      task = this.queue.shift();
+    }
+
+    if (!task) return;
+
+    this.queuedCount--;
+    if (task.timeoutId) clearTimeout(task.timeoutId);
+
+    const waitTime = Date.now() - task.queuedAt;
+    this.totalWaitTimeMs += waitTime;
+
+    this.run(task.fn).then(task.resolve).catch(task.reject);
+  }
+
+  private recordSuccess(latency: number) {
+    this.recentSuccess++;
+    this.recentTotalLatency += latency;
+    this.samplesCollected++;
+  }
+
+  private recordFailure() {
+    this.recentFailure++;
+    this.samplesCollected++;
+  }
+
+  private startAdaptiveTuning() {
+    this.adjustmentTimer = setInterval(() => this.adjustConcurrency(), this.adjustmentIntervalMs);
+  }
+
+  private adjustConcurrency() {
+    if (this.samplesCollected < 20) return;
+
+    const total = this.recentSuccess + this.recentFailure;
+    if (total === 0) return;
+
+    const instantError = this.recentFailure / total;
+    const instantLatency =
+      this.recentSuccess > 0 ? this.recentTotalLatency / this.recentSuccess : 0;
+
+    this.emaErrorRate = this.emaAlpha * instantError + (1 - this.emaAlpha) * this.emaErrorRate;
+    this.emaLatency = this.emaAlpha * instantLatency + (1 - this.emaAlpha) * this.emaLatency;
+
+    let delta = 0;
+    if (this.emaErrorRate > this.errorThreshold || this.emaLatency > this.latencyThresholdMs) {
+      delta = -this.stepSize;
+    } else if (this.emaErrorRate < 0.05 && this.active < this.currentMaxConcurrent * 0.6) {
+      delta = this.stepSize;
+    }
+
+    if (delta !== 0) {
+      const newMax = Math.max(
+        this.adaptiveMin,
+        Math.min(this.maxConcurrent, this.currentMaxConcurrent + delta),
+      );
+
+      if (newMax !== this.currentMaxConcurrent) {
+        const previous = this.currentMaxConcurrent;
+        this.currentMaxConcurrent = newMax;
+
+        this.emit('adaptive-adjust', {
+          previous: this.currentMaxConcurrent,
+          current: newMax,
+          emaErrorRate: this.emaErrorRate,
+          emaLatency: this.emaLatency,
+        });
+        this.processNext();
+      }
+    }
+
+    this.recentSuccess = this.recentFailure = this.recentTotalLatency = 0;
+  }
+
+  stats(): BulkheadStates {
+    const total = this.completed + this.rejected;
+    return {
+      name: this.name,
+      active: this.active,
+      queued: this.queuedCount,
+      currentMaxConcurrent: this.currentMaxConcurrent,
+      rejected: this.rejected,
+      completed: this.completed,
+      rejectionRate: total ? Math.round((this.rejected / total) * 100) / 100 : 0,
+      avgWaitTimeMs: total ? Math.round(this.totalWaitTimeMs / total) : 0,
+    };
+  }
+
+  destroy(): void {
+    if (this.adjustmentTimer) clearInterval(this.adjustmentTimer);
+    [...this.queue, ...(this.priorityQueue ? [] : [])].forEach(
+      (t) => t.timeoutId && clearTimeout(t.timeoutId),
+    );
+    this.queue.length = 0;
   }
 }
+
+// Registry
+
+export class BulkheadRegistry {
+  private static instance = new BulkheadRegistry();
+  private bulkheads = new Map<string, Bulkhead>();
+
+  static getInstance() {
+    return BulkheadRegistry.instance;
+  }
+
+  getOnCreate(config: BulkheadConfig): Bulkhead {
+    if (!this.bulkheads.has(config.name)) {
+      this.bulkheads.set(config.name, new Bulkhead(config));
+    }
+    return this.bulkheads.get(config.name)!;
+  }
+
+  getAllStats() {
+    return Array.from(this.bulkheads.values()).map((b) => b.stats());
+  }
+
+  destroyAll() {
+    this.bulkheads.forEach((b) => b.destroy());
+    this.bulkheads.clear();
+  }
+}
+
+export const bulkheadRegistry = BulkheadRegistry.getInstance();
